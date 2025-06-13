@@ -1,12 +1,20 @@
 from rest_framework import serializers
-from user_app.models import UserModel,ProfileModel,VendorProfileModel,MainCategoryModel,SubCategoryModel
+from user_app.models import UserModel,ProfileModel,VendorProfileModel,MainCategoryModel,SubCategoryModel,ProfileExternalLinkModel
 
+class ProfileExternalLinkSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProfileExternalLinkModel
+        fields = ['url', 'title']
 
 class ProfileSerializer(serializers.ModelSerializer):
+    username = serializers.SerializerMethodField()
+    external_links = ProfileExternalLinkSerializer(many=True, read_only=True)
+
+    def get_username(self, obj):
+        return obj.user.username if obj.user else None
     class Meta:
         model = ProfileModel
-        fields = ['user','bio', 'phone_no','profile_picture', 'profile_link']
-
+        fields = ['user','username','bio', 'phone_no','profile_picture', 'profile_link','external_links']
 
 
 class VendorProfileSerializer(serializers.ModelSerializer):
@@ -19,11 +27,24 @@ class VendorProfileSerializer(serializers.ModelSerializer):
     gst_document =serializers.FileField(required=False, allow_null=True)
     company_registration =serializers.FileField(required=False, allow_null=True)
     msme_certificate =serializers.FileField(required=False, allow_null=True)
-    
+        
     class Meta:
         model = VendorProfileModel
         exclude = ['user']
-        
+   
+
+class VendorProfileSlimSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = VendorProfileModel
+        fields = [
+            'business_name',
+            'description',
+            'status',
+            'vendor_status',
+            'logo',
+            'vendor_banner'
+        ]  
+          
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
     role = serializers.ChoiceField(choices=UserModel.ROLE_CHOICES)

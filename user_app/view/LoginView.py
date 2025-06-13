@@ -138,8 +138,7 @@ class PasswordLoginView(APIView):
                 'user': {
                     'id': user.id,
                     'username': user.username,
-                    'email': user.email
-                }
+                    'email': user.email               }
             })
         else:
             return Response({'detail': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)

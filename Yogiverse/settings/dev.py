@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',
     'phonenumber_field',
     'rest_framework',
     'rest_framework_simplejwt',
@@ -47,6 +48,9 @@ INSTALLED_APPS = [
     'user_app',
     'helper_app',
     'post_app',
+    'channels',
+    'chat_app'
+
 ]
 
 MIDDLEWARE = [
@@ -58,6 +62,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware'
 ]
 
 ROOT_URLCONF = 'Yogiverse.devurls'
@@ -80,7 +85,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'Yogiverse.wsgi.application'
 
-
+ASGI_APPLICATION = 'Yogiverse.asgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
@@ -154,35 +159,23 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.JSONRenderer',
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
+
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     "DEFAULT_FILTER_BACKENDS": [
         "django_filters.rest_framework.DjangoFilterBackend",
     ],
+
 }
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtpout.secureserver.net'
-EMAIL_USE_TLS = True
-EMAIL_USE_SSL = False
-EMAIL_PORT = 587
-EMAIL_HOST_USER = "info@yogiverse.in"
-EMAIL_PASSWORD = 'M@98Abj@123'
-EMAIL_VENDOR = "vendor@yogiverse.in"
-EMAIL_USER = "care@yogiverse.in"
-
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "http://192.168.1.154:5173",
+AUTHENTICATION_BACKENDS = [
+    'user_app.auth_backend.MultiFieldModelBackend',  # path to your backend file
+    'django.contrib.auth.backends.ModelBackend',     # keep this for admin site, etc.
 ]
 
-CORS_ORIGIN_ALLOW_ALL = True
-CORS_ALLOW_ALL_ORIGINS = True
-
-
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(days=5),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=30),    # or longer for app
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=365),      # longer for app
     "ROTATE_REFRESH_TOKENS": False,
     "BLACKLIST_AFTER_ROTATION": False,
     "UPDATE_LAST_LOGIN": False,
@@ -205,3 +198,37 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_LIFETIME': timedelta(minutes=5),
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtpout.secureserver.net'
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'info@yogiverse.in'
+DEFAULT_FROM_EMAIL = 'info@yogiverse.in'
+# EMAIL_VENDOR = 'vendor@yogiverse.in'
+# EMAIL_USER = 'care@yogiverse.in'
+EMAIL_HOST_PASSWORD = 'M@98Abj@123'
+
+
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_ALL_ORIGINS = True
+
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:8081',
+    "http://localhost:5173"
+]
+
+CORS_ALLOW_HEADERS = '*'
+
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:8081',
+    "http://localhost:5173"
+]
+
+INTERNAL_IPS = [
+    # ...
+    "127.0.0.1",
+    "192.168.1.40"
+    # ...
+]

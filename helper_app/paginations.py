@@ -14,3 +14,8 @@ class DefaultPaginationClass(PaginationWithPageCount):
     page_size = 10
     max_page_size = 25
     page_query_param = 'page'
+    
+class ChatDefaultPaginationClass(PaginationWithPageCount):
+    page_size = 30
+    max_page_size = 25
+    page_query_param = 'page'

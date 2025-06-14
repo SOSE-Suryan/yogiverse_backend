@@ -82,7 +82,7 @@ class UserModel(AbstractBaseUser, PermissionsMixin):
         
 class ProfileModel(models.Model):
     user = models.OneToOneField(UserModel, on_delete=models.CASCADE, related_name="profile")
-    bio = models.TextField(blank=True, null=True)
+    bio = models.TextField(max_length=255,blank=True, null=True)
     phone_no = PhoneNumberField(max_length=20,unique=True,blank=True, null=True)
     otp = models.IntegerField(blank=True, null=True)
     otp_requested_at = models.DateTimeField(blank=True, null=True)
@@ -92,6 +92,15 @@ class ProfileModel(models.Model):
     def __str__(self):
         return self.user.username     
 
+
+class ProfileExternalLinkModel(models.Model):
+    profile = models.ForeignKey(ProfileModel, on_delete=models.CASCADE, related_name="profile_links")
+    url = models.URLField()
+    title = models.CharField(max_length=100, blank=True, null=True)
+    
+    def __str__(self):
+        return f"{self.title or 'Link'} - {self.url}"
+    
 class MainCategoryModel(models.Model):
     name = models.CharField(max_length=50, unique=True)
 

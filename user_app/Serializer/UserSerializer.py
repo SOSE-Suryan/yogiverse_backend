@@ -8,13 +8,18 @@ class ProfileExternalLinkSerializer(serializers.ModelSerializer):
 
 class ProfileSerializer(serializers.ModelSerializer):
     username = serializers.SerializerMethodField()
+    email = serializers.SerializerMethodField()
     external_links = ProfileExternalLinkSerializer(many=True, read_only=True)
 
     def get_username(self, obj):
         return obj.user.username if obj.user else None
+    
+    def get_email(self, obj):
+        return obj.user.email if obj.user else None
+    
     class Meta:
         model = ProfileModel
-        fields = ['user','username','bio', 'phone_no','profile_picture', 'profile_link','external_links']
+        fields = ['email','user','username','bio', 'phone_no','profile_picture', 'profile_link','external_links']
 
 
 class VendorProfileSerializer(serializers.ModelSerializer):

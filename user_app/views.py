@@ -77,6 +77,8 @@ class ResetPasswordFormView(APIView):
                 get_user = UserModel.objects.get(email=fatch_user.user.email)
                 get_user.password = make_password(new_password)
                 get_user.save()
+                
+                fatch_user.delete()
                 return Response({'status': True, 'message': 'Password successfully reset. you can login now'}, status=status.HTTP_200_OK)
             else:
                 return Response({'status': False, 'message': 'Password does not match'}, status=status.HTTP_400_BAD_REQUEST)

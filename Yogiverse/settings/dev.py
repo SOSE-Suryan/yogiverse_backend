@@ -42,7 +42,9 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'import_export',
     'user_app',
-    'helper_app'
+    'helper_app',
+    'channels',
+    'chat_app'
 ]
 
 MIDDLEWARE = [
@@ -76,7 +78,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'Yogiverse.wsgi.application'
 
-
+ASGI_APPLICATION = 'Yogiverse.asgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 

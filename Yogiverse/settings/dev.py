@@ -44,7 +44,6 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt.token_blacklist",
     "django_filters",
     'import_export',
-    'corsheaders',
     'user_app',
     'helper_app',
     'post_app',

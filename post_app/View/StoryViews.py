@@ -4,17 +4,30 @@ from rest_framework.exceptions import MethodNotAllowed
 from post_app.models import Story
 from post_app.Serializer.StorySerializer import StorySerializer
 from ..permissions import IsOwnerOrReadOnly
+from django.utils import timezone
+from django.db.models import Q
 
 class StoryViewSet(viewsets.ModelViewSet):
     serializer_class = StorySerializer
     permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
 
     def get_queryset(self):
-        return Story.objects.filter(user=self.request.user).order_by('-created_at')
+        return Story.objects.filter(expires_at__gt=timezone.now())
 
     def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        serializer = self.get_serializer(queryset, many=True)
+        user = request.user
+        now = timezone.now()
+
+        # User's own stories first
+        user_stories = Story.objects.filter(user=user, expires_at__gt=now).order_by('-created_at')
+
+        # Then other users' stories
+        other_stories = Story.objects.filter(~Q(user=user), expires_at__gt=now).order_by('-created_at')
+
+        # Combine the two querysets
+        combined_queryset = list(user_stories) + list(other_stories)
+
+        serializer = self.get_serializer(combined_queryset, many=True)
         return Response({
             "success": True,
             "message": "stories retrieved",

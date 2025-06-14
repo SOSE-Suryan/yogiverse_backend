@@ -5,13 +5,14 @@ from post_app.models import Post, PostMedia, Reel, Story
 class ReelSerializer(serializers.ModelSerializer):
     like_count = serializers.SerializerMethodField(read_only=True)
     comment_count = serializers.SerializerMethodField(read_only=True)
+    type = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Reel
         fields = [
             'id', 'user', 'caption', 'video_file', 'duration', 'is_draft',
             'allow_comments', 'hide_like_count', 'music_track', 'created_at', 'updated_at',
-            'like_count', 'comment_count'
+            'like_count', 'comment_count', 'type'
         ]
         read_only_fields = ['id', 'user', 'created_at', 'updated_at']
 
@@ -20,6 +21,9 @@ class ReelSerializer(serializers.ModelSerializer):
     
     def get_comment_count(self, obj):
         return obj.comments.count()
+    
+    def get_type(self, obj):
+        return 'reel'
     
     def create(self, validated_data):
         validated_data['user'] = self.context['request'].user

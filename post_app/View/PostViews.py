@@ -28,7 +28,7 @@ class PostViewSet(viewsets.ModelViewSet):
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
-            data = serializer.data
+            data = self.get_paginated_response(serializer.data)
             return Response({"success": True, "message": "records displayed", "data": data}, status.HTTP_200_OK)
         # Pagination logic end
         serializer = self.get_serializer(queryset, many=True)

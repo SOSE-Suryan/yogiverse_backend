@@ -23,7 +23,7 @@ class ReelViewSet(viewsets.ModelViewSet):
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
-            return Response({"success": True, "message": "records displayed", "data": serializer.data}, status=status.HTTP_200_OK)
+            return Response({"success": True, "message": "records displayed", "data": self.get_paginated_response(serializer.data)}, status=status.HTTP_200_OK)
         
         serializer = self.get_serializer(queryset, many=True)
         return Response({"success": True, "message": "records displayed", "data": serializer.data}, status=status.HTTP_200_OK)

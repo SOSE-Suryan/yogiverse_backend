@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt.token_blacklist",
     "django_filters",
     'import_export',
+    'corsheaders',
     'user_app',
     'helper_app',
     'post_app',
@@ -51,6 +52,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -168,7 +170,14 @@ EMAIL_HOST_USER = "info@yogiverse.in"
 EMAIL_PASSWORD = 'M@98Abj@123'
 EMAIL_VENDOR = "vendor@yogiverse.in"
 EMAIL_USER = "care@yogiverse.in"
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://192.168.1.154:5173",
+]
+
 CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_ALL_ORIGINS = True
 
 
 SIMPLE_JWT = {

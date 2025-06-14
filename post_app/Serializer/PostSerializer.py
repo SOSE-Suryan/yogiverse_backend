@@ -1,5 +1,7 @@
 from rest_framework import serializers
-from post_app.models import Post, PostMedia, Reel, Story
+from post_app.models import Post, PostMedia, Reel, Story, Tag
+from django.utils.text import slugify
+import re
 
 class PostMediaSerializer(serializers.ModelSerializer):
     class Meta:
@@ -10,13 +12,19 @@ class PostSerializer(serializers.ModelSerializer):
     media = PostMediaSerializer(many=True, required=False)
     like_count = serializers.SerializerMethodField(read_only=True)
     comment_count = serializers.SerializerMethodField(read_only=True)
+    type = serializers.SerializerMethodField(read_only=True)
+    tags = serializers.SlugRelatedField(
+        many=True,
+        queryset=Tag.objects.all(),
+        slug_field='name'
+    )
 
     class Meta:
         model = Post
         fields = [
             'id', 'user', 'caption', 'is_draft', 'allow_comments', 'hide_like_count',
             'location', 'media', 'created_at', 'updated_at',
-            'like_count', 'comment_count'
+            'like_count', 'comment_count', 'type', 'tags'
         ]
         read_only_fields = ['id', 'user', 'created_at', 'updated_at']
 
@@ -25,6 +33,17 @@ class PostSerializer(serializers.ModelSerializer):
 
     def get_comment_count(self, obj):
         return obj.comments.count()
+
+    def get_type(self, obj):
+        return 'post'
+
+    def handle_tags(self, post, caption):
+        tags = re.findall(r'#(\w+)', caption or "")
+        tag_objs = []
+        for name in tags:
+            tag, _ = Tag.objects.get_or_create(name=name, defaults={'slug': slugify(name)})
+            tag_objs.append(tag)
+        post.tags.set(tag_objs)
     
     def create(self, validated_data):
         request = self.context['request']
@@ -54,6 +73,8 @@ class PostSerializer(serializers.ModelSerializer):
                     media_file=media_file,
                     is_video=media_metadata[i].get('is_video', False)
                 )
+        
+        self.handle_tags(post, validated_data.get('caption'))
 
         return post
 
@@ -91,5 +112,9 @@ class PostSerializer(serializers.ModelSerializer):
                     media_file=media_file,
                     is_video=media_metadata[i].get('is_video', False)
                 )
+
+        # Re-handle tags only if caption was updated
+        if 'caption' in validated_data:
+            self.handle_tags(instance, validated_data.get('caption'))
 
         return instance

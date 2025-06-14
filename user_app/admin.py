@@ -1,17 +1,46 @@
 from django.contrib import admin
 from .models import UserModel,ProfileModel,MainCategoryModel,SubCategoryModel,VendorProfileModel
 from import_export.admin import ImportExportModelAdmin
+from django.utils.translation import gettext_lazy as _
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
 
 
 # Register your models here.
 @admin.register(UserModel)
-class UserModelAdmin(ImportExportModelAdmin):
-    list_display = ('id', 'username', 'email', 'first_name', 'last_name', 'role', 'is_active', 'date_joined')[::-1]
+class UserModelAdmin(ImportExportModelAdmin, BaseUserAdmin):
+    model = UserModel
+
+    # Fields shown in the list view
+    list_display = ('id', 'username', 'email', 'first_name', 'last_name', 'role', 'is_active', 'date_joined')
+
+    # Search functionality
     search_fields = ('username', 'email', 'first_name', 'last_name')
-    # list_filter = ('role', 'is_active', 'is_staff', 'date_joined')
+
+    # Filters on the right side of admin
+    list_filter = ('role', 'is_active', 'is_staff', 'date_joined')
+
+    # Default ordering
     ordering = ('-date_joined',)
-    # readonly_fields = ('date_joined', 'last_login')
+
+    # Set fields as read-only
+    readonly_fields = ('date_joined', 'last_login')
+
+    # Group fields for user edit/add view
+    fieldsets = (
+        (None, {'fields': ('username', 'email', 'password')}),
+        (_('Personal info'), {'fields': ('first_name', 'last_name')}),
+        (_('Permissions'), {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
+        (_('Important dates'), {'fields': ('last_login', 'date_joined')}),
+        (_('Extra info'), {'fields': ('role',)}),
+    )
+
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('username', 'email', 'password1', 'password2', 'role', 'is_active', 'is_staff', 'is_superuser')}
+        ),
+    )
 
 @admin.register(ProfileModel)
 class ProfileModelAdmin(ImportExportModelAdmin):

@@ -26,10 +26,12 @@ class ReelSerializer(serializers.ModelSerializer):
         return 'reel'
     
     def create(self, validated_data):
+        validated_data.pop('tags', [])
         validated_data['user'] = self.context['request'].user
         return Reel.objects.create(**validated_data)
 
     def update(self, instance, validated_data):
+        validated_data.pop('tags', [])
         video_file = validated_data.get('video_file', None)
         if video_file:
             instance.video_file.delete(save=False)  # delete old video if needed

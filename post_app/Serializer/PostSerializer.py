@@ -51,6 +51,7 @@ class PostSerializer(serializers.ModelSerializer):
 
         # Remove media if present in validated_data
         validated_data.pop('media', None)
+        validated_data.pop('tags', [])
 
         post = Post.objects.create(user=user, **validated_data)
 
@@ -83,6 +84,7 @@ class PostSerializer(serializers.ModelSerializer):
 
         # Remove media if passed through validated_data
         validated_data.pop('media', None)
+        validated_data.pop('tags', [])
 
         # Update basic fields
         for attr, value in validated_data.items():

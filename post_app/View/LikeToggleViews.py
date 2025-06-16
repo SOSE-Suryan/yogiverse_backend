@@ -4,6 +4,8 @@ from rest_framework.permissions import IsAuthenticated
 from django.contrib.contenttypes.models import ContentType
 from post_app.models import Like, Comment
 from post_app.Serializer.LikeSerializer import LikeSerializer
+from itertools import chain
+
 
 class LikeToggleAPIView(generics.GenericAPIView):
     serializer_class = LikeSerializer
@@ -36,3 +38,38 @@ class LikeToggleAPIView(generics.GenericAPIView):
         return Response({"success": True, "message": "Liked"}, status=201)
 
 
+
+class LikeListAPIView(generics.ListAPIView):
+    serializer_class = LikeSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        content_type = request.query_params.get('content_type')
+        object_id = request.query_params.get('object_id')
+
+        if not content_type or not object_id:
+            return Response({"success": False, "message": "Content type and object ID are required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            content_type_obj = ContentType.objects.get(model=content_type.lower())
+        except ContentType.DoesNotExist:
+            return Response({"success": False, "message": "Invalid content type"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Get likes by the authenticated user first
+        user_likes = Like.objects.filter(
+            content_type=content_type_obj,
+            object_id=object_id,
+            user=request.user
+        ).order_by('-created_at')
+
+        # Get likes from other users
+        other_likes = Like.objects.filter(
+            content_type=content_type_obj,
+            object_id=object_id
+        ).exclude(user=request.user).order_by('-created_at')
+
+        # Combine both querysets
+        combined_likes = list(chain(user_likes, other_likes))
+
+        serializer = self.get_serializer(combined_likes, many=True)
+        return Response({"success": True, "data": serializer.data}, status=status.HTTP_200_OK)

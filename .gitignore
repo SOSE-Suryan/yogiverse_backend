@@ -2,4 +2,6 @@ venv/
 __pycache__/
 *.pyc
 *.pyo
-media/
+media/firebase-credentials.json
+config/firebase-credentials.json
+firebase-credentials.json

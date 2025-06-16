@@ -29,3 +29,4 @@ class ChatAttachmentModelAdmin(ImportExportModelAdmin):
 @admin.register(FCMTokenModel)
 class FCMTokenModelAdmin(admin.ModelAdmin):
     list_display = ('device_type', 'employee', 'token', 'created_on', )
+

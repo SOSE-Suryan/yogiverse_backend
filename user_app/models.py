@@ -182,3 +182,15 @@ class PasswordResetLinkModel(models.Model):
 
     def __str__(self):
         return self.reset_uuid.hex
+    
+    
+ch = (('android', 'android'), ('ios', 'ios'), ('web', 'web'), ('desktop', 'desktop'), ('other', 'other'))
+class FCMTokenModel(models.Model):
+    device_type = models.CharField(max_length=10, choices=ch)
+    user = models.ForeignKey(UserModel, on_delete=models.CASCADE, related_name="fcm_tokens")
+    token = models.TextField()
+    device_name = models.CharField(max_length=255, default='Unknown Device')
+    created_on = models.DateTimeField(default=timezone.now)
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.device_type} - {self.token}"

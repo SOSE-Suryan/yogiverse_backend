@@ -13,7 +13,7 @@ from constants import PROJECT_ENV
 
 if PROJECT_ENV == 0:
     os.environ.setdefault('DJANGO_SETTINGS_MODULE',
-                          'SOSE_backend.settings.dev')
+                          'Yogiverse.settings.dev')
 
 # if PROJECT_ENV == 1:
 #     os.environ.setdefault('DJANGO_SETTINGS_MODULE',

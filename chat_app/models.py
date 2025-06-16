@@ -66,5 +66,14 @@ class MessageModel(models.Model):
 # class HelloModel(models.Model):
 #     name = models.CharField(max_length=10)
 
-# Removing duplicate FCMTokenModel since it's already defined in user_app
+
+ch = (('android', 'android'), ('ios', 'ios'), ('web', 'web'), ('desktop', 'desktop'), ('other', 'other'))
+class FCMTokenModel(models.Model):
+    device_type = models.CharField(max_length=10, choices=ch)
+    employee = models.ForeignKey(UserModel, on_delete=models.CASCADE, related_name="fcm_tokens")
+    token = models.TextField()
+    created_on = models.DateTimeField(default=timezone.now)
+
+    # def __str__(self):
+    #     return self.employee
     

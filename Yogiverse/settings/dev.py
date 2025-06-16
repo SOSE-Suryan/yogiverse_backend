@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'channels',
     'chat_app',
     'follower_app'
+
 ]
 
 MIDDLEWARE = [

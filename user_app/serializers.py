@@ -60,4 +60,4 @@ class FCMTokenSerializer(serializers.ModelSerializer):
         # Create new token if it doesn't exist
         return FCMTokenModel.objects.create(**validated_data)
     
-    
+        exclude = ["allowed_companies"]

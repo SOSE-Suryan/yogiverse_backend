@@ -4,8 +4,10 @@ from rest_framework import status, permissions
 from django.db.models import Q
 from post_app.Paginations.Paginations import MainPagination
 from post_app.models import Post, Reel
+from user_app.models import UserModel, ProfileModel
 from post_app.Serializer.PostSerializer import PostSerializer
 from post_app.Serializer.ReelSerializer import ReelSerializer
+from user_app.Serializer.UserSerializer import UserSerializer
 
 class SearchExploreAPIView(GenericAPIView):
     permission_classes = [permissions.AllowAny]
@@ -34,10 +36,22 @@ class SearchExploreAPIView(GenericAPIView):
             Q(tags__name__icontains=query)
         ).distinct().order_by('-created_at')
 
+        user_qs = UserModel.objects.filter(
+            Q(username__icontains=query) |
+            Q(first_name__icontains=query) |
+            Q(last_name__icontains=query) |
+            Q(email__icontains=query)
+        ).distinct().order_by('-id')
+       
         post_results = PostSerializer(post_qs, many=True).data
         reel_results = ReelSerializer(reel_qs, many=True).data
-
-        combined = sorted(post_results + reel_results, key=lambda x: x['created_at'], reverse=True)
+        user_results = UserSerializer(user_qs, many=True).data
+ 
+        combined = sorted(
+            post_results + reel_results + user_results,
+            key=lambda x: x['created_at'] if 'created_at' in x else x['id'],
+            reverse=True
+        )
 
         # Pagination
         paginator = self.pagination_class()

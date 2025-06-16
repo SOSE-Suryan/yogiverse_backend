@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from post_app.models import Post, PostMedia, Reel, Story
+from post_app.Serializer.PostSerializer import PostSerializer
 
 
 class ReelSerializer(serializers.ModelSerializer):
@@ -43,4 +44,17 @@ class ReelSerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
+    
+    
+class CombinedFeedSerializer(serializers.Serializer):
+    type = serializers.SerializerMethodField()
+    data = serializers.SerializerMethodField()
+
+    def get_type(self, obj):
+        return 'post' if isinstance(obj, Post) else 'reel'
+
+    def get_data(self, obj):
+        if isinstance(obj, Post):
+            return PostSerializer(obj).data
+        return ReelSerializer(obj).data
     

@@ -11,6 +11,7 @@ from post_app.View.SearchExploreViews import SearchExploreAPIView
 from post_app.View.RecentSearchViews import RecentSearchCreateAPIView, RecentSearchListAPIView, RecentSearchDeleteAPIView, ClearAllRecentSearchesAPIView
 from post_app.View.RelatedContentViews import RelatedContentAPIView
 from post_app.View.ShareContentViews import ShareContentAPIView
+from post_app.View.HomePageViews import CombinedFeedAPIView
 
 router = DefaultRouter()
 router.register(r'posts', PostViewSet, basename='posts')
@@ -19,6 +20,7 @@ router.register(r'stories', StoryViewSet, basename='stories')
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('home-feed/', CombinedFeedAPIView.as_view(), name='home-feed'),
     path('like-toggle/', LikeToggleAPIView.as_view(), name='like-toggle'),
     path('like/list/', LikeListAPIView.as_view(), name='like-list'),
     path('comment/list/', CommentListAPIView.as_view(), name='comment-list'),

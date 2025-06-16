@@ -439,3 +439,9 @@ INFO 2025-06-15 19:48:55,095 firebase_config 21076 9032 Notification sending com
 INFO 2025-06-15 19:51:25,944 firebase_config 6168 20184 Initializing Firebase with project ID: yogiverse-4480e
 INFO 2025-06-15 19:51:25,950 firebase_config 6168 20184 Client email: firebase-adminsdk-fbsvc@yogiverse-4480e.iam.gserviceaccount.com
 INFO 2025-06-15 19:51:26,130 firebase_config 6168 20184 Firebase initialized successfully with project ID: yogiverse-4480e
+INFO 2025-06-17 00:35:19,533 firebase_config 23100 9432 Initializing Firebase with project ID: yogiverse-4480e
+INFO 2025-06-17 00:35:19,551 firebase_config 23100 9432 Client email: firebase-adminsdk-fbsvc@yogiverse-4480e.iam.gserviceaccount.com
+INFO 2025-06-17 00:35:19,843 firebase_config 23100 9432 Firebase initialized successfully with project ID: yogiverse-4480e
+INFO 2025-06-17 00:35:46,321 firebase_config 20048 21752 Initializing Firebase with project ID: yogiverse-4480e
+INFO 2025-06-17 00:35:46,329 firebase_config 20048 21752 Client email: firebase-adminsdk-fbsvc@yogiverse-4480e.iam.gserviceaccount.com
+INFO 2025-06-17 00:35:46,564 firebase_config 20048 21752 Firebase initialized successfully with project ID: yogiverse-4480e

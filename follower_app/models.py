@@ -5,10 +5,18 @@ from django.utils import timezone
 User = get_user_model()
 
 class Follower(models.Model):
+    STATUS_CHOICES = (
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    )
+    
     follower = models.ForeignKey(User, on_delete=models.CASCADE, related_name='following')
     following = models.ForeignKey(User, on_delete=models.CASCADE, related_name='followers')
     created_at = models.DateTimeField(auto_now_add=True)
     is_muted = models.BooleanField(default=False)  # To mute notifications from specific users
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         unique_together = ('follower', 'following')

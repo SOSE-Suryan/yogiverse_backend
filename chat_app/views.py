@@ -17,6 +17,13 @@ from django.shortcuts import get_object_or_404
 # Create your views here.
 
 
+class PermissionValidator:
+    def is_admin(user):
+        return user.is_authenticated and user.is_superuser
+
+    def is_employee(user):
+        return user.is_authenticated and user.is_staff 
+
 class ChatAPI(APIView,ChatDefaultPaginationClass):
     def get(self, request, id=None, format=None):
         

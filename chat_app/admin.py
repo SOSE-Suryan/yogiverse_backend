@@ -26,7 +26,3 @@ class ChatAttachmentModelAdmin(ImportExportModelAdmin):
     list_display = ("sent_at", "attachment", "chat", "sender", "id")[::-1]
 
 
-@admin.register(FCMTokenModel)
-class FCMTokenModelAdmin(admin.ModelAdmin):
-    list_display = ('device_type', 'employee', 'token', 'created_on', )
-

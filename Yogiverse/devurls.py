@@ -11,6 +11,7 @@ urlpatterns = [
     path('chat_app/', include('chat_app.urls')),
     path('admin/', admin.site.urls),
     path('', include('post_app.urls')),
+    path('follower/', include('follower_app.urls')),
 ]
 
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

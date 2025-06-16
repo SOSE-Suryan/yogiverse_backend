@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import UserModel,ProfileModel,MainCategoryModel,SubCategoryModel,VendorProfileModel
+from .models import UserModel,ProfileModel,MainCategoryModel,SubCategoryModel,VendorProfileModel,FCMTokenModel
 from import_export.admin import ImportExportModelAdmin
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
@@ -70,3 +70,12 @@ class VendorProfileModelAdmin(ImportExportModelAdmin):
     raw_id_fields = ('user',)
     # filter_horizontal = ('categories',)
     readonly_fields = ('created_at', 'updated_at')
+
+
+@admin.register(FCMTokenModel)
+class FCMTokenModelAdmin(ImportExportModelAdmin):
+    list_display = ('id', 'user', 'device_type', 'token', 'created_on')[::-1]
+    search_fields = ('user__username', 'user__email', 'token')
+    raw_id_fields = ('user',)
+    readonly_fields = ('created_on',)
+

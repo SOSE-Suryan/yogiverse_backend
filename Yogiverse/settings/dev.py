@@ -10,6 +10,7 @@ configuration = sib_api_v3_sdk.Configuration()
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
@@ -48,8 +49,8 @@ INSTALLED_APPS = [
     'helper_app',
     'post_app',
     'channels',
-    'chat_app'
-
+    'chat_app',
+    'follower_app'
 ]
 
 MIDDLEWARE = [
@@ -231,3 +232,38 @@ INTERNAL_IPS = [
     "192.168.1.40"
     # ...
 ]
+
+# Logging Configuration
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs', 'firebase.log'),
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'follower_app.firebase_config': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    },
+}
+
+# Firebase Configuration
+FIREBASE_CREDENTIALS_PATH = os.path.join(BASE_DIR, 'config', 'firebase-credentials.json')
+FIREBASE_PROJECT_ID = config.get('FIREBASE_PROJECT_ID', default='yogiverse-4480e')
+FIREBASE_STORAGE_BUCKET = config.get('FIREBASE_STORAGE_BUCKET', default='yogiverse-4480e.appspot.com')

@@ -3,7 +3,7 @@ from user_app.Serializer.UserSerializer import UserSerializer
 from .models import *
 from os.path import basename
 from django.conf import settings
-
+from user_app.models import FCMTokenModel
 from rest_framework.pagination import PageNumberPagination
 
 class ChatMessageCustomPagination(PageNumberPagination):

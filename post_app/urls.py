@@ -3,8 +3,8 @@ from rest_framework.routers import DefaultRouter
 from post_app.View.PostViews import PostViewSet
 from post_app.View.ReelViews import ReelViewSet
 from post_app.View.StoryViews import StoryViewSet
-from post_app.View.CommentViews import CommentCreateAPIView, CommentUpdateAPIView, CommentDeleteAPIView
-from post_app.View.LikeToggleViews import LikeToggleAPIView
+from post_app.View.CommentViews import CommentListAPIView, CommentCreateAPIView, CommentUpdateAPIView, CommentDeleteAPIView
+from post_app.View.LikeToggleViews import LikeToggleAPIView, LikeListAPIView
 from post_app.View.TrendingContentAPIViews import TrendingContentAPIView
 from post_app.View.CollectionsViews import CollectionListCreateAPIView, CollectionDetailAPIView, AddToCollectionAPIView, RemoveFromCollectionAPIView, DeleteCollectionAPIView
 from post_app.View.SearchExploreViews import SearchExploreAPIView
@@ -20,6 +20,8 @@ router.register(r'stories', StoryViewSet, basename='stories')
 urlpatterns = [
     path('', include(router.urls)),
     path('like-toggle/', LikeToggleAPIView.as_view(), name='like-toggle'),
+    path('like/list/', LikeListAPIView.as_view(), name='like-list'),
+    path('comment/list/', CommentListAPIView.as_view(), name='comment-list'),
     path('comment/', CommentCreateAPIView.as_view(), name='comment-create'),
     path('comment/<int:pk>/edit/', CommentUpdateAPIView.as_view(), name='comment-edit'),
     path('comment/<int:pk>/delete/', CommentDeleteAPIView.as_view(), name='comment-delete'),

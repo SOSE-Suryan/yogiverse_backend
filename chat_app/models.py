@@ -3,7 +3,7 @@ from django.db import models
 # Create your models here.
 from django.db import models
 from uuid import uuid4
-from user_app.models import UserModel
+from user_app.models import UserModel, FCMTokenModel
 from datetime import datetime, timedelta
 from django.utils import timezone
 
@@ -65,6 +65,7 @@ class MessageModel(models.Model):
 
 # class HelloModel(models.Model):
 #     name = models.CharField(max_length=10)
+
 
 ch = (('android', 'android'), ('ios', 'ios'), ('web', 'web'), ('desktop', 'desktop'), ('other', 'other'))
 class FCMTokenModel(models.Model):

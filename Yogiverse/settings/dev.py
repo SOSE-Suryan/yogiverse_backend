@@ -268,3 +268,57 @@ LOGGING = {
 FIREBASE_CREDENTIALS_PATH = os.path.join(BASE_DIR, 'config', 'firebase-credentials.json')
 FIREBASE_PROJECT_ID = config.get('FIREBASE_PROJECT_ID', default='yogiverse-4480e')
 FIREBASE_STORAGE_BUCKET = config.get('FIREBASE_STORAGE_BUCKET', default='yogiverse-4480e.appspot.com')
+
+
+IMPORT_EXPORT_USE_TRANSACTIONS = True
+DATA_UPLOAD_MAX_NUMBER_FILES = None
+DATA_UPLOAD_MAX_NUMBER_FIELDS = None
+
+
+
+
+#STATIC_URL = '/static/'
+# STATICFILES_DIRS = [BASE_DIR / 'static']
+#STATIC_ROOT = BASE_DIR / 'static'
+EXPORT_URL = '/exports/'
+EXPORT_ROOT = 'exports'
+PDF_FILES_URL = '/mypdf/'
+PDF_FILES_ROOT = 'mypdf'
+#MEDIA_ROOT = BASE_DIR / 'media'
+#MEDIA_URL = '/media/'
+
+
+
+# Define AWS settings
+AWS_ACCESS_KEY_ID = YOUR_ACCESS_KEY_ID
+AWS_SECRET_ACCESS_KEY = YOUR_SECRET_ACCESS_KEY
+AWS_STORAGE_BUCKET_NAME = YOUR_BUCKET_NAME
+AWS_S3_CUSTOM_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com"
+AWS_S3_REGION_NAME = YOUR_REGION_NAME
+
+# Set AWS storage options
+AWS_S3_FILE_OVERWRITE = False
+AWS_DEFAULT_ACL = None
+AWS_S3_VERIFY = True
+AWS_QUERYSTRING_AUTH = False
+AWS_S3_SIGNATURE_VERSION = "s3v4"
+
+# Set static and media URLs
+STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
+MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
+MEDIA_ROOT = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
+STATIC_ROOT = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
+
+# Set default file storage backend
+DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+
+# Set custom storage for static files
+STATICFILES_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+
+# Define storage classes for static and media files
+class StaticRootS3BotoStorage(S3Boto3Storage):
+    location = "static"
+
+class MediaRootS3BotoStorage(S3Boto3Storage):
+    location = "media"
+

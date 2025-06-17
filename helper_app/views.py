@@ -2,7 +2,8 @@ from django.shortcuts import render
 from .models import CountryModel,StatesModel,CitiesModel
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .serializer import CountriesSerializer,StateSerializer,CitiesSerializer
+from rest_framework.permissions import AllowAny
+from .serializer import CountriesSerializer,StateSerializer,CitiesSerializer,InquirySerializer
 from rest_framework import status
 from helper_app.paginations import DefaultPaginationClass
 from django.db.models import Q
@@ -114,3 +115,19 @@ class CitiesAPI(APIView, DefaultPaginationClass):
             serializer.save()
             return Response({'status': True, 'message': 'City Added!'}, status=status.HTTP_201_CREATED)
         return Response({"status": True, "message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+    
+
+class InquiryAPI(APIView):
+    permission_classes = [AllowAny]
+    def post(self, request, format=None):
+        try:
+            serializer = InquirySerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response({'status': True, 'message': 'Inquiry Added!'}, status=status.HTTP_201_CREATED)
+            return Response({"status": True, "message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        
+        except Exception as e:
+            return Response({"status": True, "message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+    

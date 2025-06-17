@@ -32,3 +32,21 @@ class CitiesModel(models.Model):
 
     def __str__(self):
         return self.name
+
+class InquiryModel(models.Model):
+    STATUS_CHOICES = (
+        ('pending', 'Pending'),
+        ('resolved', 'Resolved'),
+    )
+
+    company_name = models.CharField(max_length=255)
+    person_name = models.CharField(max_length=255)
+    email = models.EmailField(max_length=255)
+    country = models.ForeignKey(CountryModel, on_delete=models.CASCADE)
+    phone_number = models.CharField(max_length=255)
+    message = models.TextField()
+    status = models.CharField(max_length=255, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.company_name} - {self.person_name} - {self.email} - {self.phone_number} - {self.status} - {self.created_at}"

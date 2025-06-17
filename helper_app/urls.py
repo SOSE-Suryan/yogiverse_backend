@@ -11,6 +11,8 @@ urlpatterns = [
     path('states/', StatesAPI.as_view(), name='states'),
     path('states/<int:pk>/', StatesAPI.as_view(), name='states'),
     path('cities/', CitiesAPI.as_view(), name='cities'),
-    path('cities/<int:state_id>/', CitiesAPI.as_view(), name='cities')
+    path('cities/<int:state_id>/', CitiesAPI.as_view(), name='cities'),
+    
+    path('inquiry/', InquiryAPI.as_view(), name='inquiry'),
     
 ]

@@ -19,7 +19,7 @@ class ProfileSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = ProfileModel
-        fields = ['email','user','username','bio', 'phone_no','profile_picture', 'profile_link','external_links']
+        fields = ['id', 'email','user','username','bio', 'phone_no','profile_picture', 'profile_link','external_links']
 
 
 class VendorProfileSerializer(serializers.ModelSerializer):

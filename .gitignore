@@ -5,3 +5,4 @@ __pycache__/
 media/firebase-credentials.json
 config/firebase-credentials.json
 firebase-credentials.json
+media/

@@ -6,6 +6,7 @@ from .views import *
 from rest_framework_simplejwt.views import (
     TokenRefreshView,TokenObtainPairView
 )
+from user_app.view.CategoryViews import MainCategoryListAPIView, SubCategoryListAPIView
 
 urlpatterns = [
     path('vendor_register/',VendorRegisterView.as_view(),name ='create-vendor'),
@@ -22,6 +23,10 @@ urlpatterns = [
 
     path('fcm-token/', FCMTokenView.as_view(), name='fcm_token'),
     path('profile/', ProfileView.as_view(), name='profile'),
+    path('profile/<int:id>/', ProfileView.as_view(), name='profile'),
+    path('main-categories/', MainCategoryListAPIView.as_view(), name='main-category-list'),
+    path('sub-categories/', SubCategoryListAPIView.as_view(), name='sub-category-list'),
+
         
     # login via otp.... view filename : OTPLoginView.py
     # path('send-otp/', SendOtp.as_view(), name='send-otp-to-user'),

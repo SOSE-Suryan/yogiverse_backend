@@ -41,7 +41,7 @@ class LikeToggleAPIView(generics.GenericAPIView):
 
 class LikeListAPIView(generics.ListAPIView):
     serializer_class = LikeSerializer
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
         content_type = request.query_params.get('content_type')
@@ -55,21 +55,27 @@ class LikeListAPIView(generics.ListAPIView):
         except ContentType.DoesNotExist:
             return Response({"success": False, "message": "Invalid content type"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Get likes by the authenticated user first
-        user_likes = Like.objects.filter(
-            content_type=content_type_obj,
-            object_id=object_id,
-            user=request.user
-        ).order_by('-created_at')
+        # Get likes by authenticated user first (if any)
+        if request.user and request.user.is_authenticated:
+            user_likes = Like.objects.filter(
+                content_type=content_type_obj,
+                object_id=object_id,
+                user=request.user
+            ).order_by('-created_at')
 
-        # Get likes from other users
-        other_likes = Like.objects.filter(
-            content_type=content_type_obj,
-            object_id=object_id
-        ).exclude(user=request.user).order_by('-created_at')
+            other_likes = Like.objects.filter(
+                content_type=content_type_obj,
+                object_id=object_id
+            ).exclude(user=request.user).order_by('-created_at')
 
-        # Combine both querysets
-        combined_likes = list(chain(user_likes, other_likes))
+            combined_likes = list(chain(user_likes, other_likes))
+        else:
+            # If no authenticated user, just show all likes
+            combined_likes = Like.objects.filter(
+                content_type=content_type_obj,
+                object_id=object_id
+            ).order_by('-created_at')
+
 
         serializer = self.get_serializer(combined_likes, many=True)
         return Response({"success": True, "data": serializer.data}, status=status.HTTP_200_OK)

@@ -217,14 +217,18 @@ CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:8081',
-    "http://localhost:5173"
+    "http://localhost:5173",
+    "https://pashuahar.com",
+    "https://yogiverse.in"
 ]
 
 CORS_ALLOW_HEADERS = '*'
 
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:8081',
-    "http://localhost:5173"
+    "http://localhost:5173",
+    "https://pashuahar.com"
+    "https://yogiverse.in"
 ]
 
 INTERNAL_IPS = [

@@ -7,7 +7,9 @@ from .views import (
     NotificationListView,
     MarkNotificationReadView,
     MarkAllNotificationsReadView,
-    UpdateFCMTokenView
+    UpdateFCMTokenView,
+    HandleFollowRequestView,
+    PendingFollowRequestsView
 )
 
 urlpatterns = [
@@ -16,7 +18,9 @@ urlpatterns = [
     path('following/', FollowingListView.as_view(), name='following-list'),
     path('followers/', FollowersListView.as_view(), name='followers-list'),
     path('notifications/', NotificationListView.as_view(), name='notification-list'),
-    path('notifications/<int:notification_id>/mark-read/', MarkNotificationReadView.as_view(), name='mark-notification-read'),
-    path('notifications/mark-all-read/', MarkAllNotificationsReadView.as_view(), name='mark-all-notifications-read'),
-    path('update-fcm-token/', UpdateFCMTokenView.as_view(), name='update-fcm-token'),
+    path('notifications/<int:notification_id>/read/', MarkNotificationReadView.as_view(), name='mark-notification-read'),
+    path('notifications/read-all/', MarkAllNotificationsReadView.as_view(), name='mark-all-notifications-read'),
+    path('fcm-token/', UpdateFCMTokenView.as_view(), name='update-fcm-token'),
+    path('follow-request/', HandleFollowRequestView.as_view(), name='handle-follow-request'),
+    path('pending-requests/', PendingFollowRequestsView.as_view(), name='pending-follow-requests'),
 ] 

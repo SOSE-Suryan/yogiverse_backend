@@ -22,6 +22,6 @@ class CitiesModelAdmin(ImportExportModelAdmin):
     
 @admin.register(InquiryModel)
 class InquiryModelAdmin(ImportExportModelAdmin):
-    list_display = ('id', 'company_name', 'person_name', 'email', 'country', 'phone_number', 'status', 'created_at')
-    search_fields = ('company_name', 'person_name', 'email', 'country__country_name', 'phone_number')
+    list_display = ('id', 'company', 'name', 'email', 'country', 'phone', 'status', 'created_at')
+    search_fields = ('company', 'name', 'email', 'country__country_name', 'phone')
     raw_id_fields = ('country',)

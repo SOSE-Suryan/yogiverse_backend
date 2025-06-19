@@ -39,12 +39,12 @@ class InquiryModel(models.Model):
         ('resolved', 'Resolved'),
     )
 
-    company_name = models.CharField(max_length=255)
-    person_name = models.CharField(max_length=255)
+    company = models.CharField(max_length=255)
+    name = models.CharField(max_length=255)
     email = models.EmailField(max_length=255)
     country = models.ForeignKey(CountryModel, on_delete=models.CASCADE)
-    phone_number = models.CharField(max_length=255)
-    message = models.TextField()
+    phone = models.CharField(max_length=255)
+    subject = models.TextField()
     status = models.CharField(max_length=255, choices=STATUS_CHOICES, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
 

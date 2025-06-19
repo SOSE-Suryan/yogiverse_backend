@@ -11,6 +11,11 @@ from follower_app.models import Follower
 from post_app.Serializer.PostSerializer import PostSerializer
 from post_app.Serializer.ReelSerializer import ReelSerializer
 from follower_app.serializers import FollowerSerializer
+import logging
+
+# Configure logging
+logger = logging.getLogger(__name__)
+
 # Create your views here.
 
 class VendorRegisterView(APIView):
@@ -201,7 +206,7 @@ class UserProfileView(APIView):
         if id is not None:
             try:
                 user= UserModel.objects.get(id=id)
-                # profile = profile.profile  # assuming OneToOneField
+                logger.info(f"Fetching profile for user ID: {id}")
 
                 # Serialize profile
                 profile_serializer = ProfileSerializer(user.profile)
@@ -237,11 +242,14 @@ class UserProfileView(APIView):
                         following=request.user
                     ).first()
                     
-                    is_following = following_relationship is not None
-                    is_followed_by = followed_by_relationship is not None
+                    # Only consider as following if status is 'approved'
+                    is_following = following_relationship is not None and following_relationship.status == 'approved'
+                    is_followed_by = followed_by_relationship is not None and followed_by_relationship.status == 'approved'
                     
-                    # Get follow status if following
+                    # Always return the actual status if relationship exists, otherwise None
                     follow_status = following_relationship.status if following_relationship else None
+                    
+                    logger.info(f"Follow relationship status: {follow_status}, is_following: {is_following}")
                 else:
                     is_following = False
                     is_followed_by = False
@@ -267,8 +275,13 @@ class UserProfileView(APIView):
                 }, status=status.HTTP_200_OK)
                 
             except ProfileModel.DoesNotExist:
+                logger.error(f"Profile not found for user ID: {id}")
                 return Response({'status': False, 'message': 'Vendor Profile not found!'}, status=status.HTTP_404_NOT_FOUND)
+            except Exception as e:
+                logger.error(f"Error fetching profile for user ID {id}: {str(e)}")
+                return Response({'status': False, 'message': 'An error occurred while fetching profile.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         else:
+            logger.warning("UserProfileView called without ID parameter")
             return Response({'status': False, 'message': 'Please provide a valid ID.'}, status=status.HTTP_400_BAD_REQUEST)
     
     

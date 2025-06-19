@@ -259,6 +259,13 @@ class UserProfileView(APIView):
                         logger.info(f"All following relationships for {request.user.username}: {list(all_following_relationships.values('following__username', 'status'))}")
                         logger.info(f"All followed by relationships for {request.user.username}: {list(all_followed_by_relationships.values('follower__username', 'status'))}")
                         
+                        # Debug: Check specific relationship
+                        logger.info(f"Looking for relationship: {request.user.username} -> {user.username}")
+                        logger.info(f"Following relationship object: {following_relationship}")
+                        if following_relationship:
+                            logger.info(f"Following relationship status: {following_relationship.status}")
+                            logger.info(f"Following relationship ID: {following_relationship.id}")
+                        
                         # Only consider as following if status is 'approved'
                         is_following = following_relationship is not None and following_relationship.status == 'approved'
                         is_followed_by = followed_by_relationship is not None and followed_by_relationship.status == 'approved'
@@ -271,13 +278,15 @@ class UserProfileView(APIView):
                             follow_status = None
                             logger.info("No following relationship found")
                         
-                        logger.info(f"Following relationship found: {following_relationship}")
-                        logger.info(f"Follow relationship status: {follow_status}, is_following: {is_following}")
+                        logger.info(f"Final follow_status value: {follow_status}")
+                        logger.info(f"Final is_following value: {is_following}")
                         logger.info(f"Followed by relationship: {followed_by_relationship}")
                         logger.info(f"Is followed by: {is_followed_by}")
                         
                     except Exception as e:
                         logger.error(f"Error processing follow relationships: {str(e)}")
+                        import traceback
+                        logger.error(f"Traceback: {traceback.format_exc()}")
                         is_following = False
                         is_followed_by = False
                         follow_status = None
@@ -302,6 +311,13 @@ class UserProfileView(APIView):
                         'is_following': is_following,
                         'is_followed_by': is_followed_by,
                         'follow_status': follow_status,
+                        # Debug info - remove this after testing
+                        'debug_info': {
+                            'authenticated_user_id': request.user.id if request.user.is_authenticated else None,
+                            'profile_user_id': user.id,
+                            'follow_status_type': type(follow_status).__name__ if follow_status else 'None',
+                            'follow_status_value': str(follow_status) if follow_status else None,
+                        }
                     }
                 }, status=status.HTTP_200_OK)
                 

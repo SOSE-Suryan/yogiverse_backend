@@ -223,33 +223,64 @@ class UserProfileView(APIView):
                 posts_serializer = PostSerializer(posts, many=True)
                 reels_serializer = ReelSerializer(reels, many=True)
 
-                # Get followers/following counts
-                followers_count = user.followers.count() if hasattr(user, 'followers') else 0
-                following_count = user.following.count() if hasattr(user, 'following') else 0
+                # Get followers/following counts - only count approved relationships
+                # user.followers = users who follow this user (following field in Follower model)
+                # user.following = users this user follows (follower field in Follower model)
+                followers_count = user.followers.filter(status='approved').count()
+                following_count = user.following.filter(status='approved').count()
                 post_reels_count = posts.count() + reels.count()
+                
+                logger.info(f"Followers count (approved): {followers_count}")
+                logger.info(f"Following count (approved): {following_count}")
+                
                 # post_reels_count = reels.count() if hasattr(user, 'reels') else 0
                 
                 if request.user.is_authenticated:
-                    # Check if the authenticated user is following the profile user
-                    following_relationship = Follower.objects.filter(
-                        follower=request.user, 
-                        following=user
-                    ).first()
+                    logger.info(f"Authenticated user: {request.user.id} - {request.user.username}")
+                    logger.info(f"Profile user: {user.id} - {user.username}")
                     
-                    # Check if the profile user is following the authenticated user
-                    followed_by_relationship = Follower.objects.filter(
-                        follower=user, 
-                        following=request.user
-                    ).first()
-                    
-                    # Only consider as following if status is 'approved'
-                    is_following = following_relationship is not None and following_relationship.status == 'approved'
-                    is_followed_by = followed_by_relationship is not None and followed_by_relationship.status == 'approved'
-                    
-                    # Always return the actual status if relationship exists, otherwise None
-                    follow_status = following_relationship.status if following_relationship else None
-                    
-                    logger.info(f"Follow relationship status: {follow_status}, is_following: {is_following}")
+                    try:
+                        # Check if the authenticated user is following the profile user
+                        following_relationship = Follower.objects.filter(
+                            follower=request.user, 
+                            following=user
+                        ).first()
+                        
+                        # Check if the profile user is following the authenticated user
+                        followed_by_relationship = Follower.objects.filter(
+                            follower=user, 
+                            following=request.user
+                        ).first()
+                        
+                        # Debug: Check all relationships for both users
+                        all_following_relationships = Follower.objects.filter(follower=request.user)
+                        all_followed_by_relationships = Follower.objects.filter(following=request.user)
+                        
+                        logger.info(f"All following relationships for {request.user.username}: {list(all_following_relationships.values('following__username', 'status'))}")
+                        logger.info(f"All followed by relationships for {request.user.username}: {list(all_followed_by_relationships.values('follower__username', 'status'))}")
+                        
+                        # Only consider as following if status is 'approved'
+                        is_following = following_relationship is not None and following_relationship.status == 'approved'
+                        is_followed_by = followed_by_relationship is not None and followed_by_relationship.status == 'approved'
+                        
+                        # Always return the actual status if relationship exists, otherwise None
+                        if following_relationship:
+                            follow_status = following_relationship.status
+                            logger.info(f"Following relationship found with status: {follow_status}")
+                        else:
+                            follow_status = None
+                            logger.info("No following relationship found")
+                        
+                        logger.info(f"Following relationship found: {following_relationship}")
+                        logger.info(f"Follow relationship status: {follow_status}, is_following: {is_following}")
+                        logger.info(f"Followed by relationship: {followed_by_relationship}")
+                        logger.info(f"Is followed by: {is_followed_by}")
+                        
+                    except Exception as e:
+                        logger.error(f"Error processing follow relationships: {str(e)}")
+                        is_following = False
+                        is_followed_by = False
+                        follow_status = None
                 else:
                     is_following = False
                     is_followed_by = False

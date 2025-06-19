@@ -2,7 +2,16 @@ venv/
 __pycache__/
 *.pyc
 *.pyo
+*.pyd
+.Python
+*.so
 media/firebase-credentials.json
 config/firebase-credentials.json
 firebase-credentials.json
 media/
+.conda/
+.env
+*.log
+.DS_Store
+Thumbs.db
+logs/

@@ -223,6 +223,29 @@ class UserProfileView(APIView):
                 following_count = user.following.count() if hasattr(user, 'following') else 0
                 post_reels_count = posts.count() + reels.count()
                 # post_reels_count = reels.count() if hasattr(user, 'reels') else 0
+                
+                if request.user.is_authenticated:
+                    # Check if the authenticated user is following the profile user
+                    following_relationship = Follower.objects.filter(
+                        follower=request.user, 
+                        following=user
+                    ).first()
+                    
+                    # Check if the profile user is following the authenticated user
+                    followed_by_relationship = Follower.objects.filter(
+                        follower=user, 
+                        following=request.user
+                    ).first()
+                    
+                    is_following = following_relationship is not None
+                    is_followed_by = followed_by_relationship is not None
+                    
+                    # Get follow status if following
+                    follow_status = following_relationship.status if following_relationship else None
+                else:
+                    is_following = False
+                    is_followed_by = False
+                    follow_status = None
 
 
                 return Response({
@@ -237,6 +260,9 @@ class UserProfileView(APIView):
                         'reels': reels_serializer.data,
                         'followers_count': followers_count,
                         'following_count': following_count,
+                        'is_following': is_following,
+                        'is_followed_by': is_followed_by,
+                        'follow_status': follow_status,
                     }
                 }, status=status.HTTP_200_OK)
                 

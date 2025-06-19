@@ -5,6 +5,14 @@ from django.contrib.contenttypes.models import ContentType
 from post_app.models import Like, Comment
 from post_app.Serializer.CommentSerializer import CommentSerializer
 from itertools import chain
+from follower_app.models import FirebaseNotification
+from follower_app.firebase_config import initialize_firebase, get_user_fcm_tokens
+from firebase_admin import messaging
+import time
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class CommentListAPIView(generics.ListAPIView):
     serializer_class = CommentSerializer
@@ -65,9 +73,80 @@ class CommentCreateAPIView(generics.CreateAPIView):
     def create_comment(self, request):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(user=request.user)
-            return Response({"success": True, "message": "Comment added", "data": serializer.data}, status=201)
-        return Response({"success": False, "message": serializer.errors}, status=400)
+            comment = serializer.save(user=request.user)
+
+            # 🔍 Determine the content object (Post/Reel/etc.)
+            content_type = comment.content_type
+            object_id = comment.object_id
+            model_class = content_type.model_class()
+
+            try:
+                content_obj = model_class.objects.get(id=object_id)
+                owner = getattr(content_obj, 'user', None)  # Adjust if field is 'author' or 'owner'
+
+                if owner and owner != request.user:
+                    # ✅ Create notification in DB
+                    notification = FirebaseNotification.objects.create(
+                        user=owner,
+                        title='New Comment',
+                        body=f'{request.user.username} commented on your post',
+                        data={
+                            'type': 'comment',
+                            'commenter_id': str(request.user.id),
+                            'commenter_name': request.user.username,
+                            'commenter_profile_picture': request.user.profile.profile_picture.url if hasattr(request.user, 'profile') and request.user.profile.profile_picture else None,
+                            'content_type': content_type.model,
+                            'object_id': str(object_id),
+                            'comment_id': str(comment.id)
+                        }
+                    )
+
+                    # ✅ Send push notification
+                    try:
+                        initialize_firebase()
+                        tokens = get_user_fcm_tokens(owner)
+
+                        if tokens:
+                            for token in tokens:
+                                try:
+                                    message = messaging.Message(
+                                        notification=messaging.Notification(
+                                            title='New Comment',
+                                            body=f'{request.user.username} commented on your post',
+                                            image=request.user.profile.profile_picture.url if hasattr(request.user, 'profile') and request.user.profile.profile_picture else None
+                                        ),
+                                        data={
+                                            'type': 'comment',
+                                            'commenter_id': str(request.user.id),
+                                            'commenter_name': request.user.username,
+                                            'notification_id': str(notification.id),
+                                            'comment_id': str(comment.id),
+                                            'object_id': str(object_id),
+                                            'content_type': content_type.model,
+                                            'timestamp': str(int(time.time()))
+                                        },
+                                        token=token
+                                    )
+                                    messaging.send(message)
+                                    logger.info(f"Sent comment notification to token: {token}")
+                                except Exception as e:
+                                    logger.error(f"Error sending comment notification to token {token}: {str(e)}")
+                    except Exception as e:
+                        logger.error(f"Firebase send error: {str(e)}")
+
+            except model_class.DoesNotExist:
+                logger.warning(f"Object not found for comment target: {model_class} id={object_id}")
+
+            return Response({
+                "success": True,
+                "message": "Comment added",
+                "data": serializer.data
+            }, status=201)
+
+        return Response({
+            "success": False,
+            "message": serializer.errors
+        }, status=400)
 
 
 class CommentUpdateAPIView(generics.UpdateAPIView):

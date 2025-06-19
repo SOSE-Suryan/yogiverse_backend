@@ -2,10 +2,16 @@ from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.contenttypes.models import ContentType
-from post_app.models import Like, Comment
+from post_app.models import Like
 from post_app.Serializer.LikeSerializer import LikeSerializer
 from itertools import chain
+from follower_app.models import FirebaseNotification
+from follower_app.firebase_config import initialize_firebase, get_user_fcm_tokens
+from firebase_admin import messaging
+import time
+import logging
 
+logger = logging.getLogger(__name__)
 
 class LikeToggleAPIView(generics.GenericAPIView):
     serializer_class = LikeSerializer
@@ -34,6 +40,56 @@ class LikeToggleAPIView(generics.GenericAPIView):
         if not created:
             like.delete()
             return Response({"success": True, "message": "Unliked"}, status=200)
+
+        # ✅ Send Push Notification to Object Owner (if not self-like)
+        owner = getattr(obj, 'user', None)
+
+        if owner and owner != user:
+            try:
+                # Create database notification
+                notification = FirebaseNotification.objects.create(
+                    user=owner,
+                    title='New Like',
+                    body=f'{user.username} liked your post',
+                    data={
+                        'type': 'like',
+                        'liker_id': str(user.id),
+                        'liker_name': user.username,
+                        'liker_profile_picture': user.profile.profile_picture.url if hasattr(user, 'profile') and user.profile.profile_picture else None,
+                        'content_type': content_type,
+                        'object_id': str(object_id),
+                    }
+                )
+
+                initialize_firebase()
+                tokens = get_user_fcm_tokens(owner)
+
+                if tokens:
+                    for token in tokens:
+                        try:
+                            message = messaging.Message(
+                                notification=messaging.Notification(
+                                    title='New Like',
+                                    body=f'{user.username} liked your post',
+                                    image=user.profile.profile_picture.url if hasattr(user, 'profile') and user.profile.profile_picture else None
+                                ),
+                                data={
+                                    'type': 'like',
+                                    'liker_id': str(user.id),
+                                    'liker_name': user.username,
+                                    'notification_id': str(notification.id),
+                                    'object_id': str(object_id),
+                                    'content_type': content_type,
+                                    'timestamp': str(int(time.time()))
+                                },
+                                token=token
+                            )
+                            messaging.send(message)
+                            logger.info(f"Successfully sent like notification to token: {token}")
+                        except Exception as e:
+                            logger.error(f"Failed to send like notification to token {token}: {str(e)}")
+            except Exception as e:
+                logger.error(f"Error sending like notification: {str(e)}")
 
         return Response({"success": True, "message": "Liked"}, status=201)
 

@@ -24,7 +24,6 @@ urlpatterns = [
 
     path('fcm-token/', FCMTokenView.as_view(), name='fcm_token'),
     path('profile/', ProfileView.as_view(), name='profile'),
-<<<<<<< HEAD
     path('profile/<int:id>/', ProfileView.as_view(), name='update-profile'),
     
     path('user_profile/<int:id>/', UserProfileView.as_view(), name='profile'),
@@ -35,12 +34,6 @@ urlpatterns = [
     
     # path('sub_categories/', SubCategoryAPI.as_view(), name='sub_categories'),
     # path('sub_categories/<int:pk>/', SubCategoryAPI.as_view(), name='sub_categories_with_id'),
-=======
-    path('profile/<int:id>/', ProfileView.as_view(), name='profile'),
-    path('main-categories/', MainCategoryListAPIView.as_view(), name='main-category-list'),
-    path('sub-categories/', SubCategoryListAPIView.as_view(), name='sub-category-list'),
-
->>>>>>> c1223422bf62402b42093c770b5554a857ea6d89
         
     # login via otp.... view filename : OTPLoginView.py
     # path('send-otp/', SendOtp.as_view(), name='send-otp-to-user'),

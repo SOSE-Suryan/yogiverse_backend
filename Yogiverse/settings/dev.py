@@ -3,6 +3,7 @@ from decouple import Config, RepositoryEnv
 import sib_api_v3_sdk
 import os
 from datetime import timedelta
+import logging
 
 configuration = sib_api_v3_sdk.Configuration()
 
@@ -255,6 +256,10 @@ INTERNAL_IPS = [
 ]
 
 # Logging Configuration
+# Ensure logs directory exists
+logs_dir = os.path.join(BASE_DIR, 'logs')
+os.makedirs(logs_dir, exist_ok=True)
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -271,8 +276,9 @@ LOGGING = {
         },
         'file': {
             'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs', 'firebase.log'),
+            'filename': os.path.join(logs_dir, 'firebase.log'),
             'formatter': 'verbose',
+            'mode': 'a',  # append mode
         },
     },
     'loggers': {

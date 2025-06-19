@@ -1,16 +1,15 @@
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from user_app.models import UserModel
+from user_app.models import *
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.hashers import check_password
 from rest_framework import status
-
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from user_app.models import PasswordResetLinkModel
 from django.conf import settings
 from .get_connection import send_reset_email
-from rest_framework.exceptions import ValidationError, PermissionDenied
+from rest_framework.exceptions import ValidationError
 from django.utils import timezone
 from datetime import timedelta
 

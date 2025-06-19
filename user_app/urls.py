@@ -1,7 +1,8 @@
 from django.urls import path
-from user_app.view.UserCreationView import VendorRegisterView,ProfileView
+from user_app.view.UserCreationView import VendorRegisterView,ProfileView,UserProfileView
 from user_app.view.LoginView import  PasswordLoginView,LogoutView  #SendOtp,VerifyOtp
 from user_app.view.FCMTokenView import FCMTokenView
+from user_app.view.CategoryView import MainSubCategoryAPI
 from .views import *
 from rest_framework_simplejwt.views import (
     TokenRefreshView,TokenObtainPairView
@@ -22,6 +23,16 @@ urlpatterns = [
 
     path('fcm-token/', FCMTokenView.as_view(), name='fcm_token'),
     path('profile/', ProfileView.as_view(), name='profile'),
+    path('profile/<int:id>/', ProfileView.as_view(), name='update-profile'),
+    
+    path('user_profile/<int:id>/', UserProfileView.as_view(), name='profile'),
+    
+    
+    path('main_with_sub_categories/', MainSubCategoryAPI.as_view(), name='main_categories'),
+    path('main_with_sub_categories/<int:pk>/', MainSubCategoryAPI.as_view(), name='main_categories_with_id'),
+    
+    # path('sub_categories/', SubCategoryAPI.as_view(), name='sub_categories'),
+    # path('sub_categories/<int:pk>/', SubCategoryAPI.as_view(), name='sub_categories_with_id'),
         
     # login via otp.... view filename : OTPLoginView.py
     # path('send-otp/', SendOtp.as_view(), name='send-otp-to-user'),

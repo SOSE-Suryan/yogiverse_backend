@@ -87,6 +87,8 @@ TEMPLATES = [
 WSGI_APPLICATION = 'Yogiverse.wsgi.application'
 
 ASGI_APPLICATION = 'Yogiverse.asgi.application'
+
+
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
@@ -168,6 +170,18 @@ REST_FRAMEWORK = {
     ],
 
 }
+# CHANNEL_LAYERS = {
+#     "default": {
+#         "BACKEND": "channels_redis.core.RedisChannelLayer",
+#         "CONFIG": {"hosts": [("127.0.0.1", 6379)]},
+#     },
+# }
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {"hosts": [("192.168.1.160", 6379)]},
+    },
+}
 
 AUTHENTICATION_BACKENDS = [
     'user_app.auth_backend.MultiFieldModelBackend',  # path to your backend file
@@ -217,14 +231,20 @@ CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:8081',
-    "http://localhost:5173"
+    "http://localhost:5173",
+    "http://192.168.1.159:5173",
+    "https://1261-103-113-32-86.ngrok-free.app",
+    " https://c42a-103-113-32-86.ngrok-free.app"
 ]
 
 CORS_ALLOW_HEADERS = '*'
 
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:8081',
-    "http://localhost:5173"
+    "http://localhost:5173",
+    "http://192.168.1.159:5173",
+    "https://1261-103-113-32-86.ngrok-free.app",
+    "https://c42a-103-113-32-86.ngrok-free.app"
 ]
 
 INTERNAL_IPS = [
@@ -268,3 +288,6 @@ LOGGING = {
 FIREBASE_CREDENTIALS_PATH = os.path.join(BASE_DIR, 'config', 'firebase-credentials.json')
 FIREBASE_PROJECT_ID = config.get('FIREBASE_PROJECT_ID', default='yogiverse-4480e')
 FIREBASE_STORAGE_BUCKET = config.get('FIREBASE_STORAGE_BUCKET', default='yogiverse-4480e.appspot.com')
+
+
+

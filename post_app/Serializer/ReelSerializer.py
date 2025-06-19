@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from post_app.models import Post, PostMedia, Reel, Story
 from post_app.Serializer.PostSerializer import PostSerializer
-
+from user_app.Serializer.UserSerializer import ProfileSerializer
 
 class ReelSerializer(serializers.ModelSerializer):
     like_count = serializers.SerializerMethodField(read_only=True)
@@ -49,7 +49,8 @@ class ReelSerializer(serializers.ModelSerializer):
 class CombinedFeedSerializer(serializers.Serializer):
     type = serializers.SerializerMethodField()
     data = serializers.SerializerMethodField()
-
+    profile = serializers.SerializerMethodField()
+    
     def get_type(self, obj):
         return 'post' if isinstance(obj, Post) else 'reel'
 
@@ -57,4 +58,8 @@ class CombinedFeedSerializer(serializers.Serializer):
         if isinstance(obj, Post):
             return PostSerializer(obj).data
         return ReelSerializer(obj).data
-    
+
+    def get_profile(self, obj):
+        if isinstance(obj, Post):
+            return ProfileSerializer(obj.user.profile).data
+        return ProfileSerializer(obj.user.profile).data

@@ -49,8 +49,8 @@ class SearchExploreAPIView(GenericAPIView):
  
         combined = sorted(
             post_results + reel_results + user_results,
-            key=lambda x: x['created_at'] if 'created_at' in x else x['id'],
-            reverse=True
+            key=lambda x: str(x['created_at']) if 'created_at' in x else str(x['id']),
+            reverse=True 
         )
 
         # Pagination

@@ -94,7 +94,7 @@ class ProfileModel(models.Model):
 
 
 class ProfileExternalLinkModel(models.Model):
-    profile = models.ForeignKey(ProfileModel, on_delete=models.CASCADE, related_name="profile_links")
+    profile = models.ForeignKey(ProfileModel, on_delete=models.CASCADE, related_name="external_links")
     url = models.URLField()
     title = models.CharField(max_length=100, blank=True, null=True)
     
@@ -139,7 +139,7 @@ class VendorProfileModel(models.Model):
     logo = models.ImageField(upload_to='vendor_docs/logo/', blank=True, null=True)
     perma_link = models.URLField(blank=True, null=True)
     store_owner = models.CharField(max_length=255, blank=True, null=True, db_index=True)
-
+    vendor_banner = models.ImageField(upload_to='vendor_banner/banners/', blank=True, null=True)
     # Status fields
     STATUS_CHOICES = (
         ('published', 'Published'),

@@ -6,8 +6,11 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.db import transaction
 import ast
-
-
+from post_app.models import Post,Reel
+from follower_app.models import Follower
+from post_app.Serializer.PostSerializer import PostSerializer
+from post_app.Serializer.ReelSerializer import ReelSerializer
+from follower_app.serializers import FollowerSerializer
 # Create your views here.
 
 class VendorRegisterView(APIView):
@@ -107,7 +110,7 @@ class ProfileView(APIView):
             try:
                 if request.user.role == 'vendor':
                     vendor_profile = VendorProfileModel.objects.get(user=request.user)
-                    vendor_data = VendorProfileSlimSerializer(vendor_profile).data
+                    vendor_data = VendorProfileSerializer(vendor_profile).data
                     data['vendor_profile'] = vendor_data
             except VendorProfileModel.DoesNotExist:
                 data['vendor_profile'] = None
@@ -120,44 +123,69 @@ class ProfileView(APIView):
         if request.user.is_authenticated:
 
             if id is not None: 
+                
                 try:
-                    get_profile = ProfileModel.objects.get(id=id)
+                    profile = ProfileModel.objects.get(user=id)
+                    serializer = ProfileSerializer(profile, data=request.data, partial=True)
 
-                    serializer = ProfileSerializer(get_profile,data=request.data,partial=True)
-                    if serializer.is_valid():
-                        serializer.save()
-                        links_data = request.data.get('external_links', [])
-                        existing_links_qs = ProfileExternalLinkModel.objects.filter(profile=id)
-                        for i, link_data in enumerate(links_data):
-                            if i < existing_links_qs.count():
-                                # UPDATE existing
-                                link = existing_links_qs[i]
-                                link.url = link_data['url']
-                                link.title = link_data.get('title', '')
-                                link.save()
-                            else:
-                                # CREATE new
-                                ProfileExternalLinkModel.objects.create(
-                                    profile=get_profile,
-                                    url=link_data['url'],
-                                    title=link_data.get('title', '')
-                                )
-                        # 2. Delete any extra old links
-                        if existing_links_qs.count() > len(links_data):
-                            # delete links from len(links_data) to end
-                            for link in existing_links_qs[len(links_data):]:
-                                link.delete()
-                                
-                        # if request.user.role == 'vendor':
-                            
-                        #     vendor_profile_data = request.data.get('vendor_profile', None)
+                    if not serializer.is_valid():
+                        return Response({'status': False, 'message': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
-                        #     vendor_profile = VendorProfileModel.objects.get(user=request.user)
-                            
-                        # Return updated profile
-                        updated_profile = ProfileSerializer(get_profile)
-                            
-                    return Response({'status': True,'data':updated_profile.data,'message': 'Profile Update Successfully !'}, status=status.HTTP_200_OK)
+                    serializer.save()
+
+                    links_data = request.data.get('external_links', [])
+                    existing_links_qs = ProfileExternalLinkModel.objects.filter(profile=profile)
+                    existing_links_dict = {link.id: link for link in existing_links_qs}
+
+                    received_ids = []
+
+                    for link_data in links_data:
+                        link_id = link_data.get('id')
+                        if link_id and link_id in existing_links_dict:
+                            # Update
+                            link = existing_links_dict[link_id]
+                            link.url = link_data['url']
+                            link.title = link_data.get('title', '')
+                            link.save()
+                            received_ids.append(link_id)
+                        else:
+                            # Create new
+                            new_link = ProfileExternalLinkModel.objects.create(
+                                profile=profile,
+                                url=link_data['url'],
+                                title=link_data.get('title', '')
+                            )
+                            received_ids.append(new_link.id)
+
+                    # Delete removed links
+                    for link in existing_links_qs:
+                        if link.id not in received_ids:
+                            link.delete()
+
+                    if request.user.role == 'vendor':
+                        vendor_data = request.data.get('vendor_profile', None)
+                        if vendor_data:
+                            try:
+                                vendor_profile = VendorProfileModel.objects.get(user=request.user)
+                                vendor_serializer = VendorProfileSerializer(vendor_profile, data=vendor_data, partial=True)
+                                if vendor_serializer.is_valid():
+                                    vendor_serializer.save()
+                                else:
+                                    return Response({'status': False, 'message': vendor_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+                            except VendorProfileModel.DoesNotExist:
+                                return Response({'status': False, 'message': "Vendor profile not found"}, status=status.HTTP_404_NOT_FOUND)
+
+                    
+                    updated_profile = ProfileSerializer(profile).data
+                    if request.user.role == 'vendor':
+                        vendor_profile = VendorProfileModel.objects.get(user=request.user)
+                        updated_profile = {
+                            'profile': updated_profile,
+                            'vendor_profile': VendorProfileSerializer(vendor_profile).data
+                        }
+
+                    return Response({'status': True, 'data': updated_profile, 'message': 'Profile updated successfully!'}, status=status.HTTP_200_OK)
+
                 except Exception as e:
                     return Response({'status': False, 'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             else:
@@ -165,3 +193,56 @@ class ProfileView(APIView):
             
         else:
             return Response({'status': False, 'message': "Login is required"}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        
+class UserProfileView(APIView):
+    
+    def get(self,request,id=None):
+        if id is not None:
+            try:
+                user= UserModel.objects.get(id=id)
+                # profile = profile.profile  # assuming OneToOneField
+
+                # Serialize profile
+                profile_serializer = ProfileSerializer(user.profile)
+                # Serialize vendor profile if user is a vendor
+                if user.role == 'vendor':
+                    vendor_profile = VendorProfileModel.objects.get(user=user)
+                    vendor_profile_serializer = VendorProfileSlimSerializer(vendor_profile)
+                else:
+                    vendor_profile_serializer = None
+                # Get posts and reels
+                posts = Post.objects.filter(user=user)
+                reels = Reel.objects.filter(user=user)
+
+                posts_serializer = PostSerializer(posts, many=True)
+                reels_serializer = ReelSerializer(reels, many=True)
+
+                # Get followers/following counts
+                followers_count = user.followers.count() if hasattr(user, 'followers') else 0
+                following_count = user.following.count() if hasattr(user, 'following') else 0
+                post_reels_count = posts.count() + reels.count()
+                # post_reels_count = reels.count() if hasattr(user, 'reels') else 0
+
+
+                return Response({
+                    'status': True,
+                    'message': 'Profile data fetched successfully!',
+                    'data': {
+                        'post_reels_count': post_reels_count,
+                        'vendor_profile': vendor_profile_serializer.data if vendor_profile_serializer else None,
+                        'role': user.role,
+                        'profile': profile_serializer.data,
+                        'posts': posts_serializer.data,
+                        'reels': reels_serializer.data,
+                        'followers_count': followers_count,
+                        'following_count': following_count,
+                    }
+                }, status=status.HTTP_200_OK)
+                
+            except ProfileModel.DoesNotExist:
+                return Response({'status': False, 'message': 'Vendor Profile not found!'}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response({'status': False, 'message': 'Please provide a valid ID.'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    

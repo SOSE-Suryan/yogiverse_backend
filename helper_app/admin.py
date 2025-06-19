@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import CountryModel,StatesModel,CitiesModel
+from .models import CountryModel,StatesModel,CitiesModel,InquiryModel
 from import_export.admin import ImportExportModelAdmin
 
 # Register your models here.
@@ -19,3 +19,9 @@ class CitiesModelAdmin(ImportExportModelAdmin):
     list_display = ('id', 'name', 'state', 'country', 'is_active')
     search_fields = ('name', 'state__name', 'country__country_name')
     raw_id_fields = ('state', 'country')
+    
+@admin.register(InquiryModel)
+class InquiryModelAdmin(ImportExportModelAdmin):
+    list_display = ('id', 'company_name', 'person_name', 'email', 'country', 'phone_number', 'status', 'created_at')
+    search_fields = ('company_name', 'person_name', 'email', 'country__country_name', 'phone_number')
+    raw_id_fields = ('country',)

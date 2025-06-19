@@ -9,6 +9,15 @@ from post_app.Paginations.Paginations import MainPagination
 from rest_framework import status
 
 
+class IsOwnerOrReadOnly(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        # Allow GET, HEAD, OPTIONS for everyone
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        # Allow write/delete only for the owner
+        return obj.user == request.user
+
+
 class PostViewSet(viewsets.ModelViewSet):
     serializer_class = PostSerializer
     filter_backends = [DjangoFilterBackend]
@@ -17,7 +26,8 @@ class PostViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
 
     def get_queryset(self):
-        return Post.objects.filter(user=self.request.user).order_by('-created_at')
+        # Return all posts for retrieve/update/delete access checks
+        return Post.objects.all().order_by('-created_at')
 
     def list(self, request, *args, **kwargs):
         self.serializer_class = PostSerializer
@@ -29,21 +39,15 @@ class PostViewSet(viewsets.ModelViewSet):
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             data = self.get_paginated_response(serializer.data)
-            return Response({"success": True, "message": "records displayed", "data": data}, status.HTTP_200_OK)
-        # Pagination logic end
-        serializer = self.get_serializer(queryset, many=True)
-        data = serializer.data
-        return Response({"success": True, "message": "records displayed", "data": data}, status.HTTP_200_OK)
+            return Response({"success": True, "message": "records displayed", "data": data}, status=status.HTTP_200_OK)
 
+        serializer = self.get_serializer(queryset, many=True)
+        return Response({"success": True, "message": "records displayed", "data": serializer.data}, status=status.HTTP_200_OK)
 
     def retrieve(self, request, *args, **kwargs):
-        self.serializer_class = PostSerializer
-        queryset = self.get_object()
-        if queryset.user != request.user:
-            return Response({'status': False, 'detail': 'You do not have permission to access this object.'}, status=status.HTTP_403_FORBIDDEN)
-        serializer = self.get_serializer(queryset)
+        instance = self.get_object()  # Now allows public access, permission check handled automatically
+        serializer = self.get_serializer(instance)
         return Response({"success": True, "message": "record retrieved", "data": serializer.data}, status=status.HTTP_200_OK)
-    
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -61,14 +65,13 @@ class PostViewSet(viewsets.ModelViewSet):
             return Response({"success": False, "message": errors, "data": {}}, status=status.HTTP_400_BAD_REQUEST)
         
     def destroy(self, request, *args, **kwargs):
-        queryset = self.get_object()
-        queryset.delete()
+        instance = self.get_object()
+        self.perform_destroy(instance)
         return Response({"success": True, "message": "record deleted", "data": {}}, status=status.HTTP_200_OK)
-    
+
     def partial_update(self, request, *args, **kwargs):
         instance = self.get_object()
-        serializer = self.get_serializer(
-            instance, data=request.data, partial=True)
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response({"success": True, "message": "record updated", "data": serializer.data}, status=status.HTTP_200_OK)

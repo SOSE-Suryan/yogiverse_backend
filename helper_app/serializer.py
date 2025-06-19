@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import CountryModel,StatesModel,CitiesModel
+from .models import CountryModel,StatesModel,CitiesModel,InquiryModel
 
 
 class CountriesSerializer(serializers.ModelSerializer):
@@ -52,4 +52,9 @@ class CitiesSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CitiesModel
+        fields = '__all__'
+
+class InquirySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InquiryModel
         fields = '__all__'

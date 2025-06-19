@@ -18,6 +18,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.models import User
 from rest_framework.permissions import IsAuthenticated
 
+from user_app.models import VendorProfileModel
+
 # class SendOtp(UpdateAPIView):
 #     http_method_names = ['post']
 #     serializer_class = CustomerSendOtpSerializer
@@ -131,6 +133,10 @@ class PasswordLoginView(APIView):
     
         user = authenticate(username=username, password=password)
         if user is not None:
+            if user.role == 'vendor':
+                is_vendor_verified = VendorProfileModel.objects.filter(user=user, vendor_status='verified').exists()
+                if not is_vendor_verified:
+                    return Response({'detail': 'Your Vendor account is not verified'}, status=status.HTTP_401_UNAUTHORIZED)
             refresh = RefreshToken.for_user(user)
             return Response({
                 'refresh_token': str(refresh),

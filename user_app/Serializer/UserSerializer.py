@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from user_app.models import UserModel,ProfileModel,VendorProfileModel,MainCategoryModel,SubCategoryModel,ProfileExternalLinkModel
 from helper_app.models import CountryModel, StatesModel, CitiesModel
+from helper_app.serializer import CountriesSerializer, StateSerializer, CitiesSerializer
 
 class ProfileExternalLinkSerializer(serializers.ModelSerializer):
     class Meta:
@@ -19,12 +20,8 @@ class ProfileSerializer(serializers.ModelSerializer):
     state = serializers.PrimaryKeyRelatedField(source='user.state', queryset=StatesModel.objects.all(), required=False)
     city = serializers.PrimaryKeyRelatedField(source='user.city', queryset=CitiesModel.objects.all(), required=False)
     external_links = ProfileExternalLinkSerializer(many=True, read_only=True)
-
-    def get_username(self, obj):
-        return obj.user.username if obj.user else None
+    profile_picture = serializers.ImageField(required=False, allow_null=True)
     
-    def get_email(self, obj):
-        return obj.user.email if obj.user else None
     
     class Meta:
         model = ProfileModel
@@ -49,38 +46,36 @@ class ProfileSerializer(serializers.ModelSerializer):
 
 
 class VendorProfileSerializer(serializers.ModelSerializer):
-    # main_categories = serializers.PrimaryKeyRelatedField(
-    #     queryset=MainCategoryModel.objects.all(),many=True,required=False)
-    # subcategories = serializers.PrimaryKeyRelatedField(
-    #     queryset=SubCategoryModel.objects.all(),many=True,required=False)
+    main_categories = serializers.PrimaryKeyRelatedField(
+        queryset=MainCategoryModel.objects.all(),many=True,required=False)
+    subcategories = serializers.PrimaryKeyRelatedField(
+        queryset=SubCategoryModel.objects.all(),many=True,required=False)
     pan_document = serializers.FileField(required=False, allow_null=True)
     aadhar_document =serializers.FileField(required=False, allow_null=True)
     gst_document =serializers.FileField(required=False, allow_null=True)
     company_registration =serializers.FileField(required=False, allow_null=True)
     msme_certificate =serializers.FileField(required=False, allow_null=True)
         
-    main_categories = serializers.SerializerMethodField()
-    subcategories = serializers.SerializerMethodField()
-    
     class Meta:
         model = VendorProfileModel
         exclude = ['user']
-
-    def get_main_categories(self, obj):
-        return list(obj.main_categories.values('id', 'name'))
-
-    def get_subcategories(self, obj):
-        return [
+        
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        rep['main_categories'] = list(instance.main_categories.values('id', 'name'))
+        rep['subcategories'] = [
             {
                 "id": sub.id,
                 "name": sub.name,
                 "main_category": {
-                    "id": sub.main_category_id,
+                    "id": sub.main_category.id,
                     "name": sub.main_category.name
                 }
             }
-            for sub in obj.subcategories.select_related('main_category').all()
+            for sub in instance.subcategories.select_related('main_category').all()
         ]
+        return rep
+
         
     
    
@@ -104,6 +99,19 @@ class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
     role = serializers.ChoiceField(choices=UserModel.ROLE_CHOICES)
 
+    country = serializers.SerializerMethodField()
+    state = serializers.SerializerMethodField()
+    city = serializers.SerializerMethodField()
+    
+    def get_country(self, obj):
+        return obj.country.country_name if obj.country else None
+    
+    def get_state(self, obj):
+        return obj.state.name if obj.state else None
+    
+    def get_city(self, obj):
+        return obj.city.name if obj.city else None
+    
     class Meta:
         model = UserModel
         fields = [

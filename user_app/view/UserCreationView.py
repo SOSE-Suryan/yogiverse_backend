@@ -78,11 +78,7 @@ class VendorRegisterView(APIView):
                         # 'status': request.data.get('status'),
                         # 'vendor_status': request.data.get('vendor_status'),
                         'logo': request.FILES.get('logo'),
-                        # 'pan_document': request.FILES.get('pan_document'),
-                        # 'aadhar_document': request.FILES.get('aadhar_document'),
-                        # 'gst_document': request.FILES.get('gst_document'),
-                        # 'company_registration': request.FILES.get('company_registration'),
-                        # 'msme_certificate': request.FILES.get('msme_certificate')
+                        
                     }
                     vendor_profile_serializer = VendorProfileSerializer(data=vendor_profile_data)
                     if not vendor_profile_serializer.is_valid():
@@ -110,6 +106,7 @@ class ProfileView(APIView):
         try:
             profile = ProfileModel.objects.get(user=request.user)
             profile_data = ProfileSerializer(profile).data
+            data = {'role': request.user.role, 'profile': profile_data}
             data = {'role': request.user.role, 'profile': profile_data}
 
             try:
@@ -168,26 +165,36 @@ class ProfileView(APIView):
                             link.delete()
 
                     if request.user.role == 'vendor':
-                        vendor_data = request.data.get('vendor_profile', None)
-                        if vendor_data:
-                            try:
-                                vendor_profile = VendorProfileModel.objects.get(user=request.user)
-                                vendor_serializer = VendorProfileSerializer(vendor_profile, data=vendor_data, partial=True)
-                                if vendor_serializer.is_valid():
-                                    vendor_serializer.save()
-                                else:
-                                    return Response({'status': False, 'message': vendor_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-                            except VendorProfileModel.DoesNotExist:
-                                return Response({'status': False, 'message': "Vendor profile not found"}, status=status.HTTP_404_NOT_FOUND)
+                        vendor_data = request.data.copy()
+
+                        for field in request.FILES:
+                            vendor_data[field] = request.FILES[field]
+
+                        try:
+                            vendor_profile = VendorProfileModel.objects.get(user=request.user)
+                        except VendorProfileModel.DoesNotExist:
+                            return Response({'status': False, 'message': 'Vendor profile not found'}, status=status.HTTP_404_NOT_FOUND)
+
+                        vendor_serializer = VendorProfileSerializer(vendor_profile, data=vendor_data, partial=True)
+
+                        if vendor_serializer.is_valid():
+                            vendor_instance = vendor_serializer.save()
+
+                            if 'main_categories' in request.data:
+                                vendor_instance.main_categories.set(request.data.getlist('main_categories') if hasattr(request.data, 'getlist') else request.data['main_categories'])
+                            if 'subcategories' in request.data:
+                                vendor_instance.subcategories.set(request.data.getlist('subcategories') if hasattr(request.data, 'getlist') else request.data['subcategories'])
+                            else:
+                                return Response({'status': False, 'message': vendor_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
                     
-                    updated_profile = ProfileSerializer(profile).data
-                    if request.user.role == 'vendor':
-                        vendor_profile = VendorProfileModel.objects.get(user=request.user)
-                        updated_profile = {
-                            'profile': updated_profile,
-                            'vendor_profile': VendorProfileSerializer(vendor_profile).data
-                        }
+                        updated_profile = ProfileSerializer(profile).data
+                        if request.user.role == 'vendor':
+                            vendor_profile = VendorProfileModel.objects.get(user=request.user)
+                            updated_profile = {
+                                'profile': updated_profile,
+                                'vendor_profile': VendorProfileSerializer(vendor_profile).data
+                            }
 
                     return Response({'status': True, 'data': updated_profile, 'message': 'Profile updated successfully!'}, status=status.HTTP_200_OK)
 

@@ -48,7 +48,7 @@ class MessageModel(models.Model):
     sent_at = models.DateTimeField(default=timezone.now)
     message = models.TextField(blank=True, null=True)
     reply_message = models.JSONField(null=True, blank=True)
-    files_attachment = models.ForeignKey(ChatAttachmentModel, on_delete=models.CASCADE, blank=True, null=True)
+    files_attachment = models.ManyToManyField(ChatAttachmentModel)
     is_read = models.BooleanField(default=False)
     # attachment_url = models.URLField(blank=True, null=True, max_length=500)
     # attachment_file_name = models.SlugField(blank=True, null=True, max_length=300)
@@ -59,11 +59,9 @@ class MessageModel(models.Model):
 
     class Meta:
         ordering = ('sent_at',)
-        verbose_name = 'message'
-        verbose_name_plural = 'messages'
-
-
-# class HelloModel(models.Model):
-#     name = models.CharField(max_length=10)
-
+        indexes = [
+            models.Index(fields=['chat']),
+            models.Index(fields=['sender']),
+            models.Index(fields=['sent_at']),
+        ]
 

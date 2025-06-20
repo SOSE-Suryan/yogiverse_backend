@@ -1,7 +1,6 @@
 from rest_framework import viewsets, permissions
 from post_app.models import Post, Reel, Story
 from post_app.Serializer.PostSerializer import PostSerializer
-from ..permissions import IsOwnerOrReadOnly
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from post_app.Filters.PostFilter import PostsFilter

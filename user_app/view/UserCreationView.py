@@ -75,7 +75,7 @@ class VendorRegisterView(APIView):
                         'description': request.data.get('description'),
                         # 'perma_link': request.data.get('perma_link'),
                         # 'store_owner': request.data.get('store_owner'),
-                        'status': request.data.get('status'),
+                        # 'status': request.data.get('status'),
                         # 'vendor_status': request.data.get('vendor_status'),
                         'logo': request.FILES.get('logo'),
                         # 'pan_document': request.FILES.get('pan_document'),
@@ -110,7 +110,7 @@ class ProfileView(APIView):
         try:
             profile = ProfileModel.objects.get(user=request.user)
             profile_data = ProfileSerializer(profile).data
-            data = {'profile': profile_data}
+            data = {'role': request.user.role, 'profile': profile_data}
 
             try:
                 if request.user.role == 'vendor':
@@ -212,10 +212,11 @@ class UserProfileView(APIView):
                 profile_serializer = ProfileSerializer(user.profile)
                 # Serialize vendor profile if user is a vendor
                 if user.role == 'vendor':
-                    vendor_profile = VendorProfileModel.objects.get(user=user)
-                    vendor_profile_serializer = VendorProfileSlimSerializer(vendor_profile)
+                    vendor_profile = VendorProfileModel.objects.get(user=user) 
+                    vendor_profile_serializer = VendorProfileSerializer(vendor_profile)
                 else:
                     vendor_profile_serializer = None
+                    
                 # Get posts and reels
                 posts = Post.objects.filter(user=user)
                 reels = Reel.objects.filter(user=user)

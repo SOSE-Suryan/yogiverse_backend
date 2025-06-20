@@ -55,14 +55,14 @@ class VendorMainCategoryAdmin(ImportExportModelAdmin):
 
 @admin.register(SubCategoryModel)
 class VendorSubCategoryAdmin(ImportExportModelAdmin):
-    list_display = ('id', 'name','main_category')[::-1]
+    list_display = ('id','name','main_category')
     search_fields = ('name',)
 
 @admin.register(VendorProfileModel)
 class VendorProfileModelAdmin(ImportExportModelAdmin):
     list_display = (
         'id', 'user', 'business_name', 'vendor_status', 'status', 'store_owner', 'created_at'
-    )[::-1]
+    )
     search_fields = (
         'user__username', 'user__email', 'business_name', 'pan_number', 'aadhar_number', 'gst_number', 'store_owner'
     )

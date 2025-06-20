@@ -91,6 +91,7 @@ class VendorProfileSlimSerializer(serializers.ModelSerializer):
     class Meta:
         model = VendorProfileModel
         fields = [
+            'profile',
             'business_name',
             'description',
             'status',

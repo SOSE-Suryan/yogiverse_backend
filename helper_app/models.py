@@ -49,4 +49,4 @@ class InquiryModel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.company_name} - {self.person_name} - {self.email} - {self.phone_number} - {self.status} - {self.created_at}"
+        return f"{self.company} - {self.name} - {self.email} - {self.phone} - {self.status} - {self.created_at}"

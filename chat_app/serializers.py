@@ -11,78 +11,71 @@ class ChatMessageCustomPagination(PageNumberPagination):
     page_size_query_param = 'page_size'
     max_page_size = 1000
 
+class ChatMemberSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserModel
+        fields = ['id', 'first_name', 'last_name', 'email', 'phone_no']
+
 class ChatSerializer(serializers.ModelSerializer):
+    members = serializers.PrimaryKeyRelatedField(
+        queryset=UserModel.objects.all(),
+        many=True,
+        required=True,
+    )
     group_members = serializers.SerializerMethodField(read_only=True)
-    # group_members = ChatEmployeeSerializer(source='members',many=True)
-    all_messages = serializers.SerializerMethodField(read_only=True)
-    unread_messages = serializers.SerializerMethodField(read_only=True)
-    chat_name = serializers.SerializerMethodField(read_only=True)
+    chat_name = serializers.SerializerMethodField()
+    all_messages = serializers.SerializerMethodField()
+    unread_messages = serializers.SerializerMethodField()
+    
+    def create(self, validated_data):
+        members = validated_data.pop('members', [])
+        chat = ChatModel.objects.create(**validated_data)
+        chat.members.set(members)  # FIX: set expects a list of IDs or objects, not members.id
+        chat.save()
+        return chat
 
     def get_group_members(self, obj):
-        request = self.context.get('request')
-        full_domain = request.build_absolute_uri('/')[:-1]
-        media_url = settings.MEDIA_URL
         members = obj.members.all()
-        member_list = members.values('id','user_id__first_name','user_id__last_name','work_mobile_no','work_phone','work_mail','profile_image')
-        for i in member_list:
-            if i['profile_image']:
-                i.update({'profile_image':full_domain + media_url + i['profile_image']})
-        return {'group_members':member_list,'total_members':len(members)}
-    
-    def get_all_messages(self, obj):
+        serializer = ChatMemberSerializer(members, many=True)
+        return {
+            'members': serializer.data,
+            'total_members': members.count()
+        }
+
+    def get_chat_name(self, obj):
+        """
+        For single chat: Returns other member's full name.
+        For group chat: Returns group_name.
+        """
         request = self.context.get('request')
-        mesg = obj.messages.all().order_by('-sent_at')
-        # serializer = MessageSerializer(mesg, many=True, context={'request': request})
-        # return serializer.data
-        # ============ pagination logic start ===================
-        paginator = ChatMessageCustomPagination()
-        paginated_messages = paginator.paginate_queryset(mesg, request)
-        serializer = MessageSerializer(paginated_messages, many=True, context={'request': request})
-        paginated_response = paginator.get_paginated_response(serializer.data).data
-        res = {'all_messages':list(reversed(serializer.data)),'total_messages':mesg.count(), 'total_pages': paginated_response.get('total_pages'), 'count': paginated_response.get('count')}
-        return res
-        # ============ pagination logic end ===================
-    
+        current_user = request.user if request else None
+
+        if obj.is_single_chat and current_user:
+            # Return the other member's name
+            other_members = obj.members.exclude(id=current_user.id)
+            if other_members.exists():
+                other = other_members.first()
+                return f"{other.first_name} {other.last_name}"
+            return obj.group_name or ""
+        return obj.group_name or ""
+
+    def get_all_messages(self, obj):
+        # Example stub: Replace with your MessageSerializer and pagination if needed
+        return obj.messages.count()
+
     def get_unread_messages(self, obj):
         request = self.context.get('request')
-        unread_mesg = obj.messages.filter(is_read=False).count()
-        
-        #changes made on 28-01-2025
-        is_emp = UserSerializer.objects.filter(user_id=request.user)                
-        try:
-            unread_mesg = obj.messages.filter(is_read=False).exclude(sender=is_emp[0]).count()
-        except Exception as e:
-            print(e)
-            unread_mesg = obj.messages.filter(is_read=False).count()
-        ############################
-        
-        return unread_mesg
-    
-    def get_chat_name(self, obj):
-        request = self.context.get('request')
-        emp = UserSerializer.objects.filter(user_id=request.user)
-        chat = ChatModel.objects.filter(chat_id=obj.chat_id)
-        full_name = ""
-        if chat.exists():
-            chat_instance = chat[0]
-            if chat_instance.is_single_chat:
-                mem_list = [i for i in chat_instance.members.all()]
-                if mem_list:
-                    if emp.exists() and emp[0] in mem_list:
-                        mem_list.remove(emp[0])
-                        if mem_list:
-                            full_name = f"{mem_list[0].user_id.first_name} {mem_list[0].user_id.last_name}"
-                        else:
-                            full_name = chat_instance.group_name
-            else:
-                full_name = chat_instance.group_name
-        return full_name.capitalize()
+        current_user = request.user if request else None
+        if current_user:
+            return obj.messages.filter(is_read=False).exclude(sender=current_user).count()
+        return obj.messages.filter(is_read=False).count()
 
     class Meta:
         model = ChatModel
-        fields = "__all__"
-
-
+        fields = [
+            'id', 'chat_id', 'group_name','group_members','is_single_chat', 'created_on', 'updated_at',
+            'created_by', 'members', 'chat_name', 'all_messages', 'unread_messages'
+        ]
 
 class MessageSerializer(serializers.ModelSerializer):
     sent_by = serializers.SerializerMethodField(read_only=True)
@@ -91,20 +84,20 @@ class MessageSerializer(serializers.ModelSerializer):
     def get_sent_by(self, obj):
         return obj.sender.__str__()
 
-    # def get_attachment_data(self, obj):
-    #     request = self.context.get('request')
-    #     if obj.files_attachment:
-    #         print(request.build_absolute_uri(obj.files_attachment.attachment.url))
-    #         return {'file_name':basename(request.build_absolute_uri(obj.files_attachment.attachment.url)),'file_url':request.build_absolute_uri(obj.files_attachment.attachment.url)}
-
-
     def get_attachment_data(self, obj):
         request = self.context.get('request')
-        if obj.files_attachment:
-            file_url = request.build_absolute_uri(obj.files_attachment.attachment.url)
-            # Replace 'http://' with 'https://'
-            file_url_https = file_url.replace('http://', 'https://')
-            return {'file_name': basename(file_url_https), 'file_url': file_url_https}        
+        attachments = obj.files_attachment.all()
+        if attachments:
+            data = []
+            for attachment in attachments:
+                if request:
+                    file_url = request.build_absolute_uri(attachment.attachment.url)
+                    file_url_https = file_url.replace('http://', 'https://')
+                else:
+                    file_url_https = attachment.attachment.url
+                data.append({'file_name': basename(file_url_https), 'file_url': file_url_https})
+            return data
+        return []
 
     class Meta:
         model = MessageModel
@@ -114,9 +107,4 @@ class MessageSerializer(serializers.ModelSerializer):
 class ChatAttachmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChatAttachmentModel
-        fields = "__all__"
-
-class FCMTokenSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = FCMTokenModel
         fields = "__all__"

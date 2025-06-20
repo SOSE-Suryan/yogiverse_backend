@@ -103,7 +103,8 @@ class ProfileExternalLinkModel(models.Model):
     
 class MainCategoryModel(models.Model):
     name = models.CharField(max_length=50, unique=True)
-
+    main_category_image=models.ImageField(upload_to='main_category_image/', blank=True, null=True)
+    
     def __str__(self):
         return self.name
 
@@ -111,6 +112,7 @@ class MainCategoryModel(models.Model):
 class SubCategoryModel(models.Model):
     name = models.CharField(max_length=50)
     main_category = models.ForeignKey(MainCategoryModel, on_delete=models.CASCADE, related_name="subcategories")
+    sub_category_image=models.ImageField(upload_to='sub_category_image/', blank=True, null=True)
 
     class Meta:
         unique_together = ('name', 'main_category')

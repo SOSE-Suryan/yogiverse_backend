@@ -32,6 +32,7 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -170,18 +171,18 @@ REST_FRAMEWORK = {
     ],
 
 }
-# CHANNEL_LAYERS = {
-#     "default": {
-#         "BACKEND": "channels_redis.core.RedisChannelLayer",
-#         "CONFIG": {"hosts": [("127.0.0.1", 6379)]},
-#     },
-# }
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {"hosts": [("192.168.1.160", 6379)]},
+        "CONFIG": {"hosts": [("127.0.0.1", 6379)]},
     },
 }
+# CHANNEL_LAYERS = {
+#     "default": {
+#         "BACKEND": "channels_redis.core.RedisChannelLayer",
+#         "CONFIG": {"hosts": [("192.168.1.160", 6379)]},
+#     },
+# }
 
 AUTHENTICATION_BACKENDS = [
     'user_app.auth_backend.MultiFieldModelBackend',  # path to your backend file

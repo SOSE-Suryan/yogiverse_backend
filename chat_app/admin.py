@@ -15,7 +15,7 @@ class ChatModelAdmin(ImportExportModelAdmin):
 @admin.register(MessageModel)
 class MessageModelAdmin(ImportExportModelAdmin):
 
-    list_display = ("files_attachment", "reply_message", "message",
+    list_display = ( "reply_message", "message",
                     "sent_at", "sender", "is_read", "chat", "id")[::-1]
     ordering = ('-sent_at',)
     search_fields = ("message", "id")
@@ -23,6 +23,6 @@ class MessageModelAdmin(ImportExportModelAdmin):
 
 @admin.register(ChatAttachmentModel)
 class ChatAttachmentModelAdmin(ImportExportModelAdmin):
-    list_display = ("sent_at", "attachment", "chat", "sender", "id")[::-1]
+    list_display = ("sent_at", "chat", "sender", "id")[::-1]
 
 

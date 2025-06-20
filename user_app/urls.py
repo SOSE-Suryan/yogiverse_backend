@@ -3,11 +3,11 @@ from user_app.view.UserCreationView import VendorRegisterView,ProfileView,UserPr
 from user_app.view.LoginView import  PasswordLoginView,LogoutView  #SendOtp,VerifyOtp
 from user_app.view.FCMTokenView import FCMTokenView
 from user_app.view.CategoryView import MainSubCategoryAPI
+from user_app.view.VendorListView import VendorListView
 from .views import *
 from rest_framework_simplejwt.views import (
     TokenRefreshView,TokenObtainPairView
 )
-from user_app.view.CategoryViews import MainCategoryListAPIView, SubCategoryListAPIView
 
 urlpatterns = [
     path('vendor_register/',VendorRegisterView.as_view(),name ='create-vendor'),
@@ -27,8 +27,9 @@ urlpatterns = [
     path('profile/<int:id>/', ProfileView.as_view(), name='update-profile'),
     
     path('user_profile/<int:id>/', UserProfileView.as_view(), name='profile'),
-    
-    
+
+    path('vendor_list/', VendorListView.as_view(), name='vendor_list'),
+
     path('main_with_sub_categories/', MainSubCategoryAPI.as_view(), name='main_categories'),
     path('main_with_sub_categories/<int:pk>/', MainSubCategoryAPI.as_view(), name='main_categories_with_id'),
     

@@ -2,13 +2,23 @@ from rest_framework import serializers
 from post_app.models import Story
 from datetime import timedelta
 from django.utils import timezone
-
+from user_app.models import ProfileModel
+from user_app.Serializer.UserSerializer import ProfileSerializer 
 
 class StorySerializer(serializers.ModelSerializer):
+    profile = serializers.SerializerMethodField(read_only=True)
+
+    def get_profile(self, obj):
+        try:
+            profile = obj.user.profile 
+            return ProfileSerializer(profile).data
+        except ProfileModel.DoesNotExist:
+            return None
+        
     class Meta:
         model = Story
         fields = [
-            'id', 'user', 'media_file', 'caption', 'expires_at',
+            'id', 'user', 'profile','media_file', 'caption', 'expires_at',
             'is_highlighted', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'user', 'expires_at', 'created_at', 'updated_at']

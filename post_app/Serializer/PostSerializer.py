@@ -2,6 +2,8 @@ from rest_framework import serializers
 from post_app.models import Post, PostMedia, Reel, Story, Tag
 from django.utils.text import slugify
 import re
+from user_app.models import ProfileModel
+from user_app.Serializer.UserSerializer import ProfileSerializer 
 
 class PostMediaSerializer(serializers.ModelSerializer):
     class Meta:
@@ -18,16 +20,25 @@ class PostSerializer(serializers.ModelSerializer):
         queryset=Tag.objects.all(),
         slug_field='name'
     )
+    profile = serializers.SerializerMethodField(read_only=True)
+
 
     class Meta:
         model = Post
         fields = [
-            'id', 'user', 'caption', 'is_draft', 'allow_comments', 'hide_like_count',
+            'id', 'user','profile', 'caption', 'is_draft', 'allow_comments', 'hide_like_count',
             'location', 'media', 'created_at', 'updated_at',
             'like_count', 'comment_count', 'type', 'tags'
         ]
         read_only_fields = ['id', 'user', 'created_at', 'updated_at']
 
+    def get_profile(self, obj):
+        try:
+            profile = obj.user.profile 
+            return ProfileSerializer(profile).data
+        except ProfileModel.DoesNotExist:
+            return None
+        
     def get_like_count(self, obj):
         return obj.likes.count()
 
@@ -120,3 +131,6 @@ class PostSerializer(serializers.ModelSerializer):
             self.handle_tags(instance, validated_data.get('caption'))
 
         return instance
+    
+    
+    

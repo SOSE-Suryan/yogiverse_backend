@@ -1,21 +1,30 @@
 from rest_framework import serializers
 from post_app.models import Post, PostMedia, Reel, Story
 from post_app.Serializer.PostSerializer import PostSerializer
-from user_app.Serializer.UserSerializer import ProfileSerializer
+from user_app.models import ProfileModel
+from user_app.Serializer.UserSerializer import ProfileSerializer 
 
 class ReelSerializer(serializers.ModelSerializer):
     like_count = serializers.SerializerMethodField(read_only=True)
     comment_count = serializers.SerializerMethodField(read_only=True)
     type = serializers.SerializerMethodField(read_only=True)
+    profile = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Reel
         fields = [
-            'id', 'user', 'caption', 'video_file', 'duration', 'is_draft',
+            'id', 'user', 'profile','caption', 'video_file', 'duration', 'is_draft',
             'allow_comments', 'hide_like_count', 'music_track', 'created_at', 'updated_at',
             'like_count', 'comment_count', 'type'
         ]
         read_only_fields = ['id', 'user', 'created_at', 'updated_at']
+        
+    def get_profile(self, obj):
+        try:
+            profile = obj.user.profile 
+            return ProfileSerializer(profile).data
+        except ProfileModel.DoesNotExist:
+            return None
 
     def get_like_count(self, obj):
         return obj.likes.count()

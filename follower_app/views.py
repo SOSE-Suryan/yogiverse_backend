@@ -305,7 +305,8 @@ class FollowingListView(APIView):
     pagination_class = StandardResultsSetPagination
 
     def get(self, request):
-        following = Follower.objects.filter(follower=request.user, status='approved')
+        user_id = self.request.GET.get('user_id')
+        following = Follower.objects.filter(follower=user_id if user_id else request.user, status='approved')
         paginator = self.pagination_class()
         paginated_following = paginator.paginate_queryset(following, request)
         serializer = FollowerSerializer(paginated_following, many=True)
@@ -316,7 +317,8 @@ class FollowersListView(APIView):
     pagination_class = StandardResultsSetPagination
 
     def get(self, request):
-        followers = Follower.objects.filter(following=request.user, status='approved')
+        user_id = self.request.GET.get('user_id')
+        followers = Follower.objects.filter(following=user_id if user_id else request.user, status='approved')
         paginator = self.pagination_class()
         paginated_followers = paginator.paginate_queryset(followers, request)
         serializer = FollowerSerializer(paginated_followers, many=True)

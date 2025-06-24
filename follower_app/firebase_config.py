@@ -18,7 +18,8 @@ def initialize_firebase():
     except ValueError:
         try:
             # Get the path to your Firebase service account key file
-            service_account_path = os.path.join(settings.BASE_DIR, 'config', 'firebase-credentials.json')
+            # service_account_path = os.path.join(settings.BASE_DIR, 'config', 'firebase-credentials.json')
+            service_account_path = settings.FIREBASE_CREDENTIALS_PATH
             
             # Read the service account key file
             with open(service_account_path, 'r') as f:

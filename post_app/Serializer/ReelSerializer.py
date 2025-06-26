@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from post_app.models import Post, PostMedia, Reel, Story
+from post_app.models import Post, PostMedia, Reel, Story,CollectionItem,ContentType,Like
 from post_app.Serializer.PostSerializer import PostSerializer
 from user_app.models import ProfileModel
 from user_app.Serializer.UserSerializer import ProfileSerializer 
@@ -59,6 +59,26 @@ class CombinedFeedSerializer(serializers.Serializer):
     type = serializers.SerializerMethodField()
     data = serializers.SerializerMethodField()
     profile = serializers.SerializerMethodField()
+    is_like = serializers.SerializerMethodField()
+    
+    def get_is_like(self, obj):
+
+        request = self.context.get('request')         
+        user = getattr(request, 'user', None)
+
+        if not user or not user.is_authenticated:
+            return False
+
+        content_type = ContentType.objects.get_for_model(obj._meta.model)
+
+        is_like= Like.objects.filter(
+            user=user,
+            content_type=content_type,
+            object_id=obj.id,
+            is_like=True
+        ).exists()
+        
+        return is_like
     
     def get_type(self, obj):
         return 'post' if isinstance(obj, Post) else 'reel'

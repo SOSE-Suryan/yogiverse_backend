@@ -28,6 +28,7 @@ class Like(TimeStampedModel):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')
+    is_like = models.BooleanField(default=False)
 
     class Meta:
         unique_together = ('user', 'content_type', 'object_id')

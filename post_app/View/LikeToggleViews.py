@@ -34,7 +34,8 @@ class LikeToggleAPIView(generics.GenericAPIView):
         like, created = Like.objects.get_or_create(
             user=user,
             content_type=content_type_obj,
-            object_id=obj.id
+            object_id=obj.id,
+            is_like=True
         )
 
         if not created:

@@ -9,8 +9,6 @@ class ProfileExternalLinkSerializer(serializers.ModelSerializer):
         fields = ['url', 'title']
 
 class ProfileSerializer(serializers.ModelSerializer):
-    username = serializers.SerializerMethodField()
-    email = serializers.SerializerMethodField()
     first_name = serializers.CharField(source='user.first_name', required=False)
     last_name = serializers.CharField(source='user.last_name', required=False)
     email = serializers.EmailField(source='user.email', required=False)
@@ -32,6 +30,13 @@ class ProfileSerializer(serializers.ModelSerializer):
             'profile_picture', 'profile_link', 'external_links',
             'country', 'state', 'city'
         ]
+        
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        rep['country'] = instance.user.country.country_name if instance.user.country else None
+        rep['state'] = instance.user.state.name if instance.user.state else None
+        rep['city'] = instance.user.city.name if instance.user.city else None
+        return rep
         
     def update(self, instance, validated_data):
         # Pop user data to update separately
@@ -99,18 +104,17 @@ class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
     role = serializers.ChoiceField(choices=UserModel.ROLE_CHOICES)
 
-    country = serializers.SerializerMethodField()
-    state = serializers.SerializerMethodField()
-    city = serializers.SerializerMethodField()
+    country = serializers.PrimaryKeyRelatedField(queryset=CountryModel.objects.all(), required=False, allow_null=True)
+    state = serializers.PrimaryKeyRelatedField(queryset=StatesModel.objects.all(), required=False, allow_null=True)
+    city = serializers.PrimaryKeyRelatedField(queryset=CitiesModel.objects.all(), required=False, allow_null=True)
     
-    def get_country(self, obj):
-        return obj.country.country_name if obj.country else None
-    
-    def get_state(self, obj):
-        return obj.state.name if obj.state else None
-    
-    def get_city(self, obj):
-        return obj.city.name if obj.city else None
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        # Replace PKs with names in response
+        data['country'] = instance.country.country_name if instance.country else None
+        data['state'] = instance.state.name if instance.state else None
+        data['city'] = instance.city.name if instance.city else None
+        return data
     
     class Meta:
         model = UserModel

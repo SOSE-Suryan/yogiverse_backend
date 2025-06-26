@@ -60,8 +60,8 @@ class Comment(TimeStampedModel):
 # -------------------------
 
 class Tag(TimeStampedModel):
-    name = models.CharField(max_length=50, unique=True)
-    slug = models.SlugField(max_length=60, unique=True, blank=True)
+    name = models.CharField(max_length=50)
+    slug = models.SlugField(max_length=60, blank=True)
 
     class Meta:
         ordering = ['name']

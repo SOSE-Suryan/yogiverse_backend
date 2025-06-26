@@ -66,17 +66,7 @@ class VendorRegisterView(APIView):
                         'business_name': request.data.get('business_name'),
                         'main_categories': main_categories,
                         'subcategories': subcategories,
-                        # 'pan_number': request.data.get('pan_number'),
-                        # 'aadhar_number': request.data.get('aadhar_number'),
-                        # 'gst_number': request.data.get('gst_number'),
-                        # 'achievement_awards': request.data.get('achievement_awards'),
-                        # 'business_type': request.data.get('business_type'),
-                        # 'business_presence': request.data.get('business_presence'),
                         'description': request.data.get('description'),
-                        # 'perma_link': request.data.get('perma_link'),
-                        # 'store_owner': request.data.get('store_owner'),
-                        # 'status': request.data.get('status'),
-                        # 'vendor_status': request.data.get('vendor_status'),
                         'logo': request.FILES.get('logo'),
                         
                     }
@@ -106,7 +96,6 @@ class ProfileView(APIView):
         try:
             profile = ProfileModel.objects.get(user=request.user)
             profile_data = ProfileSerializer(profile).data
-            data = {'role': request.user.role, 'profile': profile_data}
             data = {'role': request.user.role, 'profile': profile_data}
 
             try:

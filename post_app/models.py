@@ -28,6 +28,7 @@ class Like(TimeStampedModel):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')
+    is_like = models.BooleanField(default=False)
 
     class Meta:
         unique_together = ('user', 'content_type', 'object_id')
@@ -60,8 +61,8 @@ class Comment(TimeStampedModel):
 # -------------------------
 
 class Tag(TimeStampedModel):
-    name = models.CharField(max_length=50, unique=True)
-    slug = models.SlugField(max_length=60, unique=True, blank=True)
+    name = models.CharField(max_length=50, )
+    slug = models.SlugField(max_length=60,blank=True)
 
     class Meta:
         ordering = ['name']
@@ -171,6 +172,7 @@ class CollectionItem(models.Model):
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')
     saved_at = models.DateTimeField(auto_now_add=True)
+    is_collection = models.BooleanField(default=False)
 
     class Meta:
         unique_together = ('collection', 'content_type', 'object_id')  # Avoid duplicates in same collection

@@ -4,6 +4,7 @@ from django.utils.text import slugify
 import re
 from user_app.models import ProfileModel
 from user_app.Serializer.UserSerializer import ProfileSerializer 
+from post_app.models import Post, PostMedia,CollectionItem,ContentType
 
 class PostMediaSerializer(serializers.ModelSerializer):
     class Meta:
@@ -21,14 +22,45 @@ class PostSerializer(serializers.ModelSerializer):
         slug_field='name'
     )
     profile = serializers.SerializerMethodField(read_only=True)
+    # is_collection = serializers.SerializerMethodField()
+    # collection_id = serializers.SerializerMethodField()
 
+    # def _get_collection_item(self, obj):
+    #     """Private method to get CollectionItem instance once per object."""
+    #     if hasattr(obj, '_collection_item'):
+    #         return obj._collection_item
+
+    #     request = self.context.get('request')
+    #     user = getattr(request, 'user', None)
+        
+    #     if not user or not user.is_authenticated:
+    #         obj._collection_item = None
+    #         return None
+
+    #     content_type = ContentType.objects.get_for_model(obj._meta.model)
+    #     item = CollectionItem.objects.filter(
+    #         content_type=content_type,
+    #         object_id=obj.id,
+    #         is_collection=True,
+    #         collection__user=user  # if collection is user-specific
+    #     ).first()
+
+    #     obj._collection_item = item
+    #     return item
+
+    # def get_is_collection(self, obj):
+    #     return bool(self._get_collection_item(obj))
+
+    # def get_collection_id(self, obj):
+    #     collection_item = self._get_collection_item(obj)
+    #     return collection_item.collection.id if collection_item else None
 
     class Meta:
         model = Post
         fields = [
             'id', 'user','profile', 'caption', 'is_draft', 'allow_comments', 'hide_like_count',
             'location', 'media', 'created_at', 'updated_at',
-            'like_count', 'comment_count', 'type', 'tags'
+            'like_count', 'comment_count', 'type', 'tags',
         ]
         read_only_fields = ['id', 'user', 'created_at', 'updated_at']
 

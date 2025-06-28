@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from post_app.models import Post, PostMedia, Reel, Story
+from post_app.models import Post, PostMedia, Reel, Story,CollectionItem,ContentType,Like
 from post_app.Serializer.PostSerializer import PostSerializer
 from user_app.models import ProfileModel
 from user_app.Serializer.UserSerializer import ProfileSerializer 
@@ -59,7 +59,80 @@ class CombinedFeedSerializer(serializers.Serializer):
     type = serializers.SerializerMethodField()
     data = serializers.SerializerMethodField()
     profile = serializers.SerializerMethodField()
-    
+    is_like = serializers.SerializerMethodField()
+    is_collection = serializers.SerializerMethodField()
+    collection_id = serializers.SerializerMethodField()
+
+    def _get_collection_item(self, obj):
+        """Private method to get CollectionItem instance once per object."""
+        if hasattr(obj, '_collection_item'):
+            return obj._collection_item
+
+        request = self.context.get('request')
+        user = getattr(request, 'user', None)
+        
+        if not user or not user.is_authenticated:
+            obj._collection_item = None
+            return None
+
+        content_type = ContentType.objects.get_for_model(obj._meta.model)
+        item = CollectionItem.objects.filter(
+            content_type=content_type,
+            object_id=obj.id,
+            is_collection=True,
+            collection__user=user  # if collection is user-specific
+        ).first()
+
+        obj._collection_item = item
+        return item
+
+    def get_is_collection(self, obj):
+        return bool(self._get_collection_item(obj))
+
+    def get_collection_id(self, obj):
+        collection_item = self._get_collection_item(obj)
+        return collection_item.collection.id if collection_item else None
+
+    # def get_is_collection(self,obj):
+    #     request = self.context.get('request')         
+    #     user = getattr(request, 'user', None)
+    #     if not user or not user.is_authenticated:
+    #         return False
+
+    #     content_type = ContentType.objects.get_for_model(obj._meta.model)
+
+    #     is_collection= CollectionItem.objects.filter(
+    #         content_type=content_type,
+    #         object_id=obj.id,
+    #         is_collection=True
+    #     ).exists()
+        
+    #     return is_collection
+        
+    #     # return {
+    #     #     "is_collection": is_collection,
+    #     #     "collection_id":is_collection.collection
+    #     # }
+        
+    def get_is_like(self, obj):
+
+        request = self.context.get('request')         
+        user = getattr(request, 'user', None)
+
+        if not user or not user.is_authenticated:
+            return False
+
+        content_type = ContentType.objects.get_for_model(obj._meta.model)
+
+        is_like= Like.objects.filter(
+            user=user,
+            content_type=content_type,
+            object_id=obj.id,
+            is_like=True
+        ).exists()
+        
+        return is_like
+            
     def get_type(self, obj):
         return 'post' if isinstance(obj, Post) else 'reel'
 

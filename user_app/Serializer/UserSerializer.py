@@ -1,7 +1,8 @@
 from rest_framework import serializers
 from user_app.models import UserModel,ProfileModel,VendorProfileModel,MainCategoryModel,SubCategoryModel,ProfileExternalLinkModel
 from helper_app.models import CountryModel, StatesModel, CitiesModel
-from helper_app.serializer import CountriesSerializer, StateSerializer, CitiesSerializer
+# from helper_app.serializer import CountriesSerializer, StateSerializer, CitiesSerializer
+from post_app.models import CollectionItem,ContentType,Like
 
 class ProfileExternalLinkSerializer(serializers.ModelSerializer):
     class Meta:
@@ -9,8 +10,6 @@ class ProfileExternalLinkSerializer(serializers.ModelSerializer):
         fields = ['url', 'title']
 
 class ProfileSerializer(serializers.ModelSerializer):
-    username = serializers.SerializerMethodField()
-    email = serializers.SerializerMethodField()
     first_name = serializers.CharField(source='user.first_name', required=False)
     last_name = serializers.CharField(source='user.last_name', required=False)
     email = serializers.EmailField(source='user.email', required=False)
@@ -21,8 +20,45 @@ class ProfileSerializer(serializers.ModelSerializer):
     city = serializers.PrimaryKeyRelatedField(source='user.city', queryset=CitiesModel.objects.all(), required=False)
     external_links = ProfileExternalLinkSerializer(many=True, read_only=True)
     profile_picture = serializers.ImageField(required=False, allow_null=True)
+ 
+    # is_like = serializers.SerializerMethodField()
+    # is_collection = serializers.SerializerMethodField()
     
-    
+    # def get_is_collection(self,obj):
+    #     request = self.context.get('request')         
+    #     user = getattr(request, 'user', None)
+    #     if not user or not user.is_authenticated:
+    #         return False
+
+    #     content_type = ContentType.objects.get_for_model(obj._meta.model)
+
+    #     is_collection= CollectionItem.objects.filter(
+    #         # user=user,
+    #         content_type=content_type,
+    #         object_id=obj.id,
+    #         is_collection=True
+    #     ).exists()
+        
+    #     return is_collection
+        
+    # def get_is_like(self, obj):
+
+    #     request = self.context.get('request')         
+    #     user = getattr(request, 'user', None)
+    #     print(user,'user prfileeeee')
+    #     if not user or not user.is_authenticated:
+    #         return False
+
+    #     content_type = ContentType.objects.get_for_model(obj._meta.model)
+
+    #     is_like= Like.objects.filter(
+    #         user=user,
+    #         content_type=content_type,
+    #         object_id=obj.id,
+    #         is_like=True
+    #     ).exists()
+        
+    #     return is_like
     class Meta:
         model = ProfileModel
         
@@ -33,6 +69,15 @@ class ProfileSerializer(serializers.ModelSerializer):
             'country', 'state', 'city'
         ]
         
+    
+        
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        rep['country'] = instance.user.country.country_name if instance.user.country else None
+        rep['state'] = instance.user.state.name if instance.user.state else None
+        rep['city'] = instance.user.city.name if instance.user.city else None
+        return rep
+    
     def update(self, instance, validated_data):
         # Pop user data to update separately
         user_data = validated_data.pop('user', {})
@@ -40,9 +85,7 @@ class ProfileSerializer(serializers.ModelSerializer):
             setattr(instance.user, attr, value)
         instance.user.save()
 
-        # Update remaining profile fields
         return super().update(instance, validated_data)
-        # fields = ['email','user','username','bio', 'phone_no','profile_picture', 'profile_link','external_links']
 
 
 class VendorProfileSerializer(serializers.ModelSerializer):
@@ -55,7 +98,8 @@ class VendorProfileSerializer(serializers.ModelSerializer):
     gst_document =serializers.FileField(required=False, allow_null=True)
     company_registration =serializers.FileField(required=False, allow_null=True)
     msme_certificate =serializers.FileField(required=False, allow_null=True)
-        
+    logo = serializers.ImageField(required=False, allow_null=True)
+    
     class Meta:
         model = VendorProfileModel
         exclude = ['user']
@@ -99,18 +143,17 @@ class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
     role = serializers.ChoiceField(choices=UserModel.ROLE_CHOICES)
 
-    country = serializers.SerializerMethodField()
-    state = serializers.SerializerMethodField()
-    city = serializers.SerializerMethodField()
+    country = serializers.PrimaryKeyRelatedField(queryset=CountryModel.objects.all(), required=False, allow_null=True)
+    state = serializers.PrimaryKeyRelatedField(queryset=StatesModel.objects.all(), required=False, allow_null=True)
+    city = serializers.PrimaryKeyRelatedField(queryset=CitiesModel.objects.all(), required=False, allow_null=True)
     
-    def get_country(self, obj):
-        return obj.country.country_name if obj.country else None
-    
-    def get_state(self, obj):
-        return obj.state.name if obj.state else None
-    
-    def get_city(self, obj):
-        return obj.city.name if obj.city else None
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        # Replace PKs with names in response
+        data['country'] = instance.country.country_name if instance.country else None
+        data['state'] = instance.state.name if instance.state else None
+        data['city'] = instance.city.name if instance.city else None
+        return data
     
     class Meta:
         model = UserModel

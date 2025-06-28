@@ -25,6 +25,7 @@ class VendorRegisterView(APIView):
         try:
             with transaction.atomic():
                 user_serializer = UserSerializer(data=request.data)
+
                 if not user_serializer.is_valid():
                     return Response({"status": False, "message": "User validation failed.", "errors": user_serializer.errors},status=status.HTTP_400_BAD_REQUEST)        
                 user = user_serializer.save()
@@ -65,16 +66,8 @@ class VendorRegisterView(APIView):
                         'user': user,
                         'business_name': request.data.get('business_name'),
                         'main_categories': main_categories,
-                        'subcategories': subcategories,
-                        # 'pan_number': request.data.get('pan_number'),
-                        # 'aadhar_number': request.data.get('aadhar_number'),
-                        # 'gst_number': request.data.get('gst_number'),
-                        # 'achievement_awards': request.data.get('achievement_awards'),
-                        # 'business_type': request.data.get('business_type'),
-                        # 'business_presence': request.data.get('business_presence'),
-                        'description': request.data.get('description'),
-                        # 'perma_link': request.data.get('perma_link'),
-                        # 'store_owner': request.data.get('store_owner'),
+                        'subcategories': subcategories,                        
+                        'description': request.data.get('description'),                        
                         # 'status': request.data.get('status'),
                         # 'vendor_status': request.data.get('vendor_status'),
                         'logo': request.FILES.get('logo'),
@@ -107,7 +100,6 @@ class ProfileView(APIView):
             profile = ProfileModel.objects.get(user=request.user)
             profile_data = ProfileSerializer(profile).data
             data = {'role': request.user.role, 'profile': profile_data}
-            data = {'role': request.user.role, 'profile': profile_data}
 
             try:
                 if request.user.role == 'vendor':
@@ -125,7 +117,6 @@ class ProfileView(APIView):
         if request.user.is_authenticated:
 
             if id is not None: 
-                
                 try:
                     profile = ProfileModel.objects.get(user=id)
                     serializer = ProfileSerializer(profile, data=request.data, partial=True)
@@ -166,9 +157,12 @@ class ProfileView(APIView):
 
                     if request.user.role == 'vendor':
                         vendor_data = request.data.copy()
-
                         for field in request.FILES:
-                            vendor_data[field] = request.FILES[field]
+                        
+                            file = request.FILES.get(field)
+                            if file:
+                                vendor_data[field] = file
+                            # vendor_data[field] = request.FILES[field]
 
                         try:
                             vendor_profile = VendorProfileModel.objects.get(user=request.user)
@@ -179,7 +173,6 @@ class ProfileView(APIView):
 
                         if vendor_serializer.is_valid():
                             vendor_instance = vendor_serializer.save()
-
                             if 'main_categories' in request.data:
                                 vendor_instance.main_categories.set(request.data.getlist('main_categories') if hasattr(request.data, 'getlist') else request.data['main_categories'])
                             if 'subcategories' in request.data:

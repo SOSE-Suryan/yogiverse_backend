@@ -45,9 +45,9 @@ class CombinedFeedAPIView(generics.ListAPIView):
         # Step 6: Manual pagination (because it's not a queryset)
         page = self.paginate_queryset(combined_items)
         if page is not None:
-            serializer = CombinedFeedSerializer(page, many=True)
+            serializer = CombinedFeedSerializer(page, many=True,context={'request': request})
             data = self.get_paginated_response(serializer.data)
             return Response({"success": True, "message": "records displayed", "data": data}, status.HTTP_200_OK)
 
-        serializer = CombinedFeedSerializer(combined_items, many=True)
+        serializer = CombinedFeedSerializer(combined_items, many=True,context={'request': request})
         return Response({"success": True, "data": serializer.data})

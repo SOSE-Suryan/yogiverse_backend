@@ -63,6 +63,7 @@ class UserModel(AbstractBaseUser, PermissionsMixin):
     state = models.ForeignKey(StatesModel, on_delete=models.CASCADE,blank=True, null=True)
     city = models.ForeignKey(CitiesModel, on_delete=models.CASCADE,blank=True, null=True)
     is_active = models.BooleanField(default=True)
+    is_delete = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
     date_joined = models.DateTimeField(default=timezone.now)

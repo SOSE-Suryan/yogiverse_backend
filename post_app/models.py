@@ -172,7 +172,7 @@ class CollectionItem(models.Model):
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')
     saved_at = models.DateTimeField(auto_now_add=True)
-
+    is_collection = models.BooleanField(default=False)
     class Meta:
         unique_together = ('collection', 'content_type', 'object_id')  # Avoid duplicates in same collection
 

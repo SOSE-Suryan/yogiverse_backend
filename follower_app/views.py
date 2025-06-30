@@ -304,8 +304,18 @@ class FollowingListView(APIView):
     permission_classes = [IsAuthenticated]
     pagination_class = StandardResultsSetPagination
 
-    def get(self, request):
+    def get(self, request,id=None):
         user_id = self.request.GET.get('user_id')
+        
+        # user_id = id if id is not None else request.user.id  Add commentMore actions
+        # user = request.user
+        # if id is not None:
+        #     from django.contrib.auth import get_user_model
+        #     User = get_user_model()
+        #     try:
+        #         user = User.objects.get(id=id)
+        #     except User.DoesNotExist:Add commentMore actions
+        #         return Response({'detail': 'User not found.'}, status=404)  
         following = Follower.objects.filter(follower=user_id if user_id else request.user, status='approved')
         paginator = self.pagination_class()
         paginated_following = paginator.paginate_queryset(following, request)
@@ -318,6 +328,15 @@ class FollowersListView(APIView):
 
     def get(self, request):
         user_id = self.request.GET.get('user_id')
+         # user_id = id if id is not None else request.user.idAdd commentMore actions
+        # user = request.user
+        # if id is not None:
+        #     from django.contrib.auth import get_user_model
+        #     User = get_user_model()
+        #     try:
+        #         user = User.objects.get(id=id)
+        #     except User.DoesNotExist:
+        #         return Response({'detail': 'User not found.'}, status=404)
         followers = Follower.objects.filter(following=user_id if user_id else request.user, status='approved')
         paginator = self.pagination_class()
         paginated_followers = paginator.paginate_queryset(followers, request)

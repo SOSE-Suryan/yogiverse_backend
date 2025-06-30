@@ -62,12 +62,12 @@ class CollectionDetailAPIView(generics.RetrieveAPIView):
         # Pagination logic start
         page = self.paginate_queryset(items_qs)
         if page is not None:
-            serializer = CollectionItemSerializer(page, many=True)
+            serializer = CollectionItemSerializer(page, many=True,context={'request': request})
             data = self.get_paginated_response(serializer.data)
             return Response({"success": True, "message": "records displayed", "collection": collection_data, "data": data}, status.HTTP_200_OK)
         # Pagination logic end
 
-        items_data = CollectionItemSerializer(items_qs, many=True).data
+        items_data = CollectionItemSerializer(items_qs, many=True,context={'request': request}).data
 
         return Response({
             "success": True,

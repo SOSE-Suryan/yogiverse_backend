@@ -2,14 +2,16 @@ from rest_framework import serializers
 from django.contrib.contenttypes.models import ContentType
 from post_app.models import Post, Reel
 from post_app.models import Collection, CollectionItem
-
+from post_app.Serializer.PostSerializer import PostSerializer
+from post_app.Serializer.ReelSerializer import ReelSerializer
 
 class CollectionItemSerializer(serializers.ModelSerializer):
     content_type = serializers.CharField()
+    item_data = serializers.SerializerMethodField()
 
     class Meta:
         model = CollectionItem
-        fields = ['id', 'collection', 'content_type', 'object_id', 'saved_at']
+        fields = ['id', 'collection', 'content_type', 'object_id', 'saved_at','is_collection','item_data']
 
     def validate(self, attrs):
         model_map = {'post': Post, 'reel': Reel}
@@ -24,6 +26,23 @@ class CollectionItemSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({'object_id': 'Object does not exist'})
         return attrs
 
+    def create(self, validated_data):
+        validated_data['is_collection'] = True  # Force set to TrueAdd commentMore actions
+        return super().create(validated_data)
+    
+    def get_item_data(self, obj):
+        
+        model_class = obj.content_type.model_class() 
+        instance = model_class.objects.filter(id=obj.object_id).first()
+
+        if not instance:
+            return None
+
+        if isinstance(instance, Post):
+            return PostSerializer(instance).data
+        elif isinstance(instance, Reel):
+            return ReelSerializer(instance).data
+        return None
 
 class CollectionSerializer(serializers.ModelSerializer):
     # collection_items = serializers.SerializerMethodField(read_only=True)

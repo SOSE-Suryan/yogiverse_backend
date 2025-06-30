@@ -157,7 +157,10 @@ class ProfileView(APIView):
                         vendor_data = request.data.copy()
 
                         for field in request.FILES:
-                            vendor_data[field] = request.FILES[field]
+                            file = request.FILES.get(field)
+                            if file:
+                                vendor_data[field] = file
+                            # vendor_data[field] = request.FILES[field]
 
                         try:
                             vendor_profile = VendorProfileModel.objects.get(user=request.user)

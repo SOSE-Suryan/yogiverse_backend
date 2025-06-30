@@ -1,7 +1,8 @@
 from rest_framework import serializers
 from user_app.models import UserModel,ProfileModel,VendorProfileModel,MainCategoryModel,SubCategoryModel,ProfileExternalLinkModel
 from helper_app.models import CountryModel, StatesModel, CitiesModel
-from helper_app.serializer import CountriesSerializer, StateSerializer, CitiesSerializer
+# from helper_app.serializer import CountriesSerializer, StateSerializer, CitiesSerializer
+from post_app.models import CollectionItem,ContentType,Like
 
 class ProfileExternalLinkSerializer(serializers.ModelSerializer):
     class Meta:
@@ -20,6 +21,45 @@ class ProfileSerializer(serializers.ModelSerializer):
     external_links = ProfileExternalLinkSerializer(many=True, read_only=True)
     profile_picture = serializers.ImageField(required=False, allow_null=True)
     
+    # is_like = serializers.SerializerMethodField()
+    # is_collection = serializers.SerializerMethodField()
+
+    
+    # def get_is_collection(self,obj):
+    #     request = self.context.get('request')         
+    #     user = getattr(request, 'user', None)
+    #     if not user or not user.is_authenticated:
+    #         return False
+
+    #     content_type = ContentType.objects.get_for_model(obj._meta.model)
+
+    #     is_collection= CollectionItem.objects.filter(
+    #         # user=user,
+    #         content_type=content_type,
+    #         object_id=obj.id,
+    #         is_collection=True
+    #     ).exists()
+        
+    #     return is_collection
+        
+    # def get_is_like(self, obj):
+
+    #     request = self.context.get('request')         
+    #     user = getattr(request, 'user', None)
+    #     print(user,'user prfileeeee')
+    #     if not user or not user.is_authenticated:
+    #         return False
+
+    #     content_type = ContentType.objects.get_for_model(obj._meta.model)
+
+    #     is_like= Like.objects.filter(
+    #         user=user,
+    #         content_type=content_type,
+    #         object_id=obj.id,
+    #         is_like=True
+    #     ).exists()
+        
+    #     return is_like
     
     class Meta:
         model = ProfileModel
@@ -60,7 +100,8 @@ class VendorProfileSerializer(serializers.ModelSerializer):
     gst_document =serializers.FileField(required=False, allow_null=True)
     company_registration =serializers.FileField(required=False, allow_null=True)
     msme_certificate =serializers.FileField(required=False, allow_null=True)
-        
+    logo = serializers.ImageField(required=False, allow_null=True)
+      
     class Meta:
         model = VendorProfileModel
         exclude = ['user']

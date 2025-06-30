@@ -133,3 +133,18 @@ class DeactivateAccountAPI(APIView):
                 return Response({"status": False, "message": "Your account is already deactivated!"})
         else:
             return Response({"status": False, "message": "Please login first!"})
+        
+        
+        
+class DeleteAccountAPI(APIView):
+    def post(self, request):
+        if request.user.is_authenticated:
+            user = UserModel.objects.get(email=request.user)
+            if user.is_active:
+                user.is_delete = True
+                user.delete()
+                return Response({"status": True, "message": "Your account has been successfully deleted!"})
+            else:
+                return Response({"status": False, "message": "Your account is already deleted!"})
+        else:
+            return Response({"status": False, "message": "Please login first!"})

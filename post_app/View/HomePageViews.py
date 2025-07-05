@@ -8,7 +8,7 @@ from follower_app.models import Follower
 from post_app.models import Post, Reel
 from post_app.Paginations.Paginations import MainPagination
 from post_app.Serializer.ReelSerializer import CombinedFeedSerializer
-
+from chat_app.models import MessageModel
 User = get_user_model()
 
 class CombinedFeedAPIView(generics.ListAPIView):
@@ -38,6 +38,11 @@ class CombinedFeedAPIView(generics.ListAPIView):
         # Step 4: Fetch Posts and Reels from those users
         posts = Post.objects.filter(user_id__in=target_user_ids).order_by('-created_at')
         reels = Reel.objects.filter(user_id__in=target_user_ids).order_by('-created_at')
+        
+        unread_message_count =MessageModel.objects.filter(
+            chat__members=user,
+            is_read=False
+        ).exclude(sender=user).count()
 
         # Step 5: Combine and sort
         combined_items = sorted(chain(posts, reels), key=lambda x: x.created_at, reverse=True)
@@ -46,8 +51,17 @@ class CombinedFeedAPIView(generics.ListAPIView):
         page = self.paginate_queryset(combined_items)
         if page is not None:
             serializer = CombinedFeedSerializer(page, many=True,context={'request': request})
-            data = self.get_paginated_response(serializer.data)
-            return Response({"success": True, "message": "records displayed", "data": data}, status.HTTP_200_OK)
+            paginated_response = self.get_paginated_response(serializer.data)
+            paginated_response['unread_message_count'] = unread_message_count
+            return Response({"success": True, "message": "records displayed", "data": paginated_response}, status.HTTP_200_OK)
 
         serializer = CombinedFeedSerializer(combined_items, many=True,context={'request': request})
-        return Response({"success": True, "data": serializer.data})
+        
+        return Response({
+            "success": True,
+            "data": {
+                "results": serializer.data,
+                "unread_message_count": unread_message_count
+            }
+        }, status.HTTP_200_OK)
+        # return Response({"success": True, "data": serializer.data})

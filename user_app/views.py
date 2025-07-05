@@ -135,7 +135,6 @@ class DeactivateAccountAPI(APIView):
             return Response({"status": False, "message": "Please login first!"})
         
         
-        
 class DeleteAccountAPI(APIView):
     def post(self, request):
         if request.user.is_authenticated:
@@ -148,3 +147,4 @@ class DeleteAccountAPI(APIView):
                 return Response({"status": False, "message": "Your account is already deleted!"})
         else:
             return Response({"status": False, "message": "Please login first!"})
+        

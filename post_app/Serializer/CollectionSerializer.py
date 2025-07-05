@@ -25,6 +25,24 @@ class CollectionItemSerializer(serializers.ModelSerializer):
         except model_map[model_name].DoesNotExist:
             raise serializers.ValidationError({'object_id': 'Object does not exist'})
         return attrs
+    
+    def create(self, validated_data):
+        validated_data['is_collection'] = True  # Force set to True
+        return super().create(validated_data)
+    
+    def get_item_data(self, obj):
+        
+        model_class = obj.content_type.model_class() 
+        instance = model_class.objects.filter(id=obj.object_id).first()
+
+        if not instance:
+            return None
+
+        if isinstance(instance, Post):
+            return PostSerializer(instance).data
+        elif isinstance(instance, Reel):
+            return ReelSerializer(instance).data
+        return None
 
     def create(self, validated_data):
         validated_data['is_collection'] = True  # Force set to TrueAdd commentMore actions

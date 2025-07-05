@@ -12,10 +12,14 @@ from django.utils import timezone
 class ChatModel(models.Model):
     chat_id = models.UUIDField(default=uuid4, editable=False, unique=True)
     members = models.ManyToManyField(UserModel)
+    admins = models.ManyToManyField(UserModel, related_name='admin_chats', blank=True)
     group_name = models.CharField(max_length=255,blank=True, null=True)
+    group_icon = models.ImageField(upload_to='group_icons/', null=True, blank=True)
     created_on = models.DateTimeField(default=timezone.now, blank=True, null=True)
     created_by = models.ForeignKey(UserModel, on_delete=models.CASCADE, related_name="created_by", blank=True, null=True)
     is_single_chat = models.BooleanField(default=False)
+    deleted_for = models.ManyToManyField(UserModel, blank=True, related_name="deleted_chats")
+
     updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
 
     # def get_members(self):

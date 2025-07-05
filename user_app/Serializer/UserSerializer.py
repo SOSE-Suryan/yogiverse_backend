@@ -20,10 +20,9 @@ class ProfileSerializer(serializers.ModelSerializer):
     city = serializers.PrimaryKeyRelatedField(source='user.city', queryset=CitiesModel.objects.all(), required=False)
     external_links = ProfileExternalLinkSerializer(many=True, read_only=True)
     profile_picture = serializers.ImageField(required=False, allow_null=True)
-    
+ 
     # is_like = serializers.SerializerMethodField()
     # is_collection = serializers.SerializerMethodField()
-
     
     # def get_is_collection(self,obj):
     #     request = self.context.get('request')         
@@ -60,7 +59,6 @@ class ProfileSerializer(serializers.ModelSerializer):
     #     ).exists()
         
     #     return is_like
-    
     class Meta:
         model = ProfileModel
         
@@ -71,13 +69,15 @@ class ProfileSerializer(serializers.ModelSerializer):
             'country', 'state', 'city'
         ]
         
+    
+        
     def to_representation(self, instance):
         rep = super().to_representation(instance)
         rep['country'] = instance.user.country.country_name if instance.user.country else None
         rep['state'] = instance.user.state.name if instance.user.state else None
         rep['city'] = instance.user.city.name if instance.user.city else None
         return rep
-        
+    
     def update(self, instance, validated_data):
         # Pop user data to update separately
         user_data = validated_data.pop('user', {})
@@ -85,9 +85,7 @@ class ProfileSerializer(serializers.ModelSerializer):
             setattr(instance.user, attr, value)
         instance.user.save()
 
-        # Update remaining profile fields
         return super().update(instance, validated_data)
-        # fields = ['email','user','username','bio', 'phone_no','profile_picture', 'profile_link','external_links']
 
 
 class VendorProfileSerializer(serializers.ModelSerializer):
@@ -101,7 +99,7 @@ class VendorProfileSerializer(serializers.ModelSerializer):
     company_registration =serializers.FileField(required=False, allow_null=True)
     msme_certificate =serializers.FileField(required=False, allow_null=True)
     logo = serializers.ImageField(required=False, allow_null=True)
-      
+    
     class Meta:
         model = VendorProfileModel
         exclude = ['user']

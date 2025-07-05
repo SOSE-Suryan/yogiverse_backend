@@ -37,7 +37,7 @@ class LikeToggleAPIView(generics.GenericAPIView):
             object_id=obj.id,
             is_like=True
         )
-
+       
         if not created:
             like.delete()
             return Response({"success": True, "message": "Unliked"}, status=200)

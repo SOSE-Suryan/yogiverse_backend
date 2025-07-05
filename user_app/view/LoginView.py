@@ -133,8 +133,8 @@ class PasswordLoginView(APIView):
     
         user = authenticate(username=username, password=password)
         if user is not None:
-            if user.is_delete:
-                return Response({'detail': 'Your account has been deleted'}, status=status.HTTP_401_UNAUTHORIZED)
+            # if user.is_delete:
+            #     return Response({'detail': 'Your account has been deleted'}, status=status.HTTP_401_UNAUTHORIZED)
             if user.role == 'vendor':
                 is_vendor_verified = VendorProfileModel.objects.filter(user=user, vendor_status='verified').exists()
                 if not is_vendor_verified:

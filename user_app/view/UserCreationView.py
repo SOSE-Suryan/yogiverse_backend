@@ -12,6 +12,9 @@ from post_app.Serializer.PostSerializer import PostSerializer
 from post_app.Serializer.ReelSerializer import ReelSerializer
 from follower_app.serializers import FollowerSerializer
 import logging
+from chat_app.models import ChatModel
+from django.db.models import Count
+
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -25,6 +28,7 @@ class VendorRegisterView(APIView):
         try:
             with transaction.atomic():
                 user_serializer = UserSerializer(data=request.data)
+
                 if not user_serializer.is_valid():
                     return Response({"status": False, "message": "User validation failed.", "errors": user_serializer.errors},status=status.HTTP_400_BAD_REQUEST)        
                 user = user_serializer.save()
@@ -65,8 +69,10 @@ class VendorRegisterView(APIView):
                         'user': user,
                         'business_name': request.data.get('business_name'),
                         'main_categories': main_categories,
-                        'subcategories': subcategories,
-                        'description': request.data.get('description'),
+                        'subcategories': subcategories,                        
+                        'description': request.data.get('description'),                        
+                        # 'status': request.data.get('status'),
+                        # 'vendor_status': request.data.get('vendor_status'),
                         'logo': request.FILES.get('logo'),
                         
                     }
@@ -114,7 +120,6 @@ class ProfileView(APIView):
         if request.user.is_authenticated:
 
             if id is not None: 
-                
                 try:
                     profile = ProfileModel.objects.get(user=id)
                     serializer = ProfileSerializer(profile, data=request.data, partial=True)
@@ -155,8 +160,8 @@ class ProfileView(APIView):
 
                     if request.user.role == 'vendor':
                         vendor_data = request.data.copy()
-
                         for field in request.FILES:
+                        
                             file = request.FILES.get(field)
                             if file:
                                 vendor_data[field] = file
@@ -171,7 +176,6 @@ class ProfileView(APIView):
 
                         if vendor_serializer.is_valid():
                             vendor_instance = vendor_serializer.save()
-
                             if 'main_categories' in request.data:
                                 vendor_instance.main_categories.set(request.data.getlist('main_categories') if hasattr(request.data, 'getlist') else request.data['main_categories'])
                             if 'subcategories' in request.data:
@@ -216,6 +220,26 @@ class UserProfileView(APIView):
                 else:
                     vendor_profile_serializer = None
                     
+                #Get chat
+                # chat = (
+                #     ChatModel.objects
+                #     .filter(members=user)
+                #     .filter(members=request.user)
+                #     .annotate(num_members=Count('members'))
+                #     .filter(num_members=2)  # ensures it's only a 1-to-1 chat
+                #     .first()
+                # )
+                
+                chat = (
+                ChatModel.objects
+                .filter(is_single_chat=True, members__in=[request.user, user])
+                .annotate(num_members=Count('members'))
+                .filter(num_members=2)
+                .first()
+                        )
+
+                chat_id = str(chat.chat_id) if chat else None
+                is_chat = bool(chat)
                 # Get posts and reels
                 posts = Post.objects.filter(user=user)
                 reels = Reel.objects.filter(user=user)
@@ -303,6 +327,8 @@ class UserProfileView(APIView):
                         'post_reels_count': post_reels_count,
                         'vendor_profile': vendor_profile_serializer.data if vendor_profile_serializer else None,
                         'role': user.role,
+                        'chat_id':chat_id,
+                        'is_chat':is_chat,
                         'profile': profile_serializer.data,
                         'posts': posts_serializer.data,
                         'reels': reels_serializer.data,

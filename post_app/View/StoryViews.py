@@ -1,8 +1,10 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.exceptions import MethodNotAllowed
-from post_app.models import Story
-from post_app.Serializer.StorySerializer import StorySerializer
+from post_app.models import Story, StoryView
+from user_app.models import UserModel
+from follower_app.models import Follower
+from post_app.Serializer.StorySerializer import StorySerializer, StoryViewSerializer
 from django.utils import timezone
 from django.db.models import Q
 
@@ -29,9 +31,18 @@ class StoryViewSet(viewsets.ModelViewSet):
         # Own stories
         user_stories = Story.objects.filter(user=user, expires_at__gt=now)
         # Others' stories
-        other_stories = Story.objects.filter(~Q(user=user), expires_at__gt=now)
+        # Get approved followings (users this user follows)
+        following_users = UserModel.objects.filter(
+            id__in=Follower.objects.filter(follower=user, status='approved').values_list('following_id', flat=True)
+        )
+        others = Story.objects.filter(user__in=following_users, expires_at__gt=now).exclude(user=user)
 
-        combined_queryset = list(user_stories) + list(other_stories)
+        # Separate viewed and unviewed
+        viewed_story_ids = StoryView.objects.filter(viewer=user).values_list('story_id', flat=True)
+        unviewed_stories = others.exclude(id__in=viewed_story_ids)
+        viewed_stories = others.filter(id__in=viewed_story_ids)
+
+        combined_queryset = list(user_stories) + list(unviewed_stories.order_by('-created_at')) + list(viewed_stories.order_by('-created_at'))
         serializer = self.get_serializer(combined_queryset, many=True)
 
         return Response({
@@ -80,3 +91,51 @@ class StoryViewSet(viewsets.ModelViewSet):
             "message": "story deleted",
             "data": {}
         }, status=status.HTTP_200_OK)
+
+
+
+from rest_framework.views import APIView
+
+class StoryViewCreateAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, story_id, *args, **kwargs):
+        # story_id = request.data.get('story_id')
+        # if not story_id:
+        #     return Response({"success": False, "message": "story_id is required"}, status=400)
+
+        try:
+            story = Story.objects.get(id=story_id)
+        except Story.DoesNotExist:
+            return Response({"success": False, "message": "Story not found"}, status=404)
+
+        if story.user == request.user:
+            return Response({"success": True, "message": "It's your own story"}, status=200)
+
+        view, created = StoryView.objects.get_or_create(story=story, viewer=request.user)
+
+        return Response({
+            "success": True,
+            "message": "Story view recorded",
+            "new_view": created
+        }, status=200)
+
+
+
+class StoryViewersListAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, story_id):
+        try:
+            story = Story.objects.get(id=story_id, user=request.user)
+        except Story.DoesNotExist:
+            return Response({"success": False, "message": "Story not found or permission denied"}, status=404)
+
+        viewers = story.views.select_related('viewer').order_by('-viewed_at')
+        serialized_data = StoryViewSerializer(viewers, many=True).data
+
+        return Response({
+            "success": True,
+            "message": "Viewer list retrieved",
+            "data": serialized_data
+        }, status=200)

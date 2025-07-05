@@ -154,6 +154,17 @@ class Story(TimeStampedModel):
         return f"{self.user.first_name} {self.user.last_name}'s Story"
 
 
+class StoryView(models.Model):
+    story = models.ForeignKey(Story, on_delete=models.CASCADE, related_name='views')
+    viewer = models.ForeignKey(UserModel, on_delete=models.CASCADE, related_name='viewed_stories')
+    viewed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('story', 'viewer')  # prevent duplicate views
+
+    def __str__(self):
+        return f"{self.viewer.username} viewed story {self.story.id}"
+
 # -------------------------
 # Collection MODEL
 # -------------------------

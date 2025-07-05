@@ -2,7 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from post_app.View.PostViews import PostViewSet
 from post_app.View.ReelViews import ReelViewSet
-from post_app.View.StoryViews import StoryViewSet
+from post_app.View.StoryViews import StoryViewSet, StoryViewCreateAPIView, StoryViewersListAPIView
 from post_app.View.CommentViews import CommentListAPIView, CommentCreateAPIView, CommentUpdateAPIView, CommentDeleteAPIView
 from post_app.View.LikeToggleViews import LikeToggleAPIView, LikeListAPIView
 from post_app.View.TrendingContentAPIViews import TrendingContentAPIView
@@ -41,5 +41,7 @@ urlpatterns = [
     path('related-content/', RelatedContentAPIView.as_view(), name='related-content'),
     path('share/', ShareContentAPIView.as_view(), name='share-content'),
 
+    path('stories/<int:story_id>/view/', StoryViewCreateAPIView.as_view(), name='story-view'),
+    path('stories/<int:story_id>/viewers/', StoryViewersListAPIView.as_view(), name='story-viewers'),
 
 ]

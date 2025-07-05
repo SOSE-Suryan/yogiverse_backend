@@ -12,9 +12,28 @@ class ChatMessageCustomPagination(PageNumberPagination):
     max_page_size = 1000
 
 class ChatMemberSerializer(serializers.ModelSerializer):
+    type = serializers.SerializerMethodField()
+    profile_picture = serializers.SerializerMethodField()
+    
+    def get_type(self, obj):
+        chat = self.context.get('chat')  # Passed from parent serializer!
+        if chat and obj.id == chat.created_by_id:
+            return 'admin'
+        return 'member'
+    
+    def get_profile_picture(self, obj):
+        # obj is a UserModel instance
+        if hasattr(obj, 'profile') and obj.profile.profile_picture:
+            request = self.context.get('request')
+            url = obj.profile.profile_picture.url
+            # Optional: return absolute URL if context has request
+            if request is not None:
+                return request.build_absolute_uri(url)
+            return url
+        return None
     class Meta:
         model = UserModel
-        fields = ['id', 'first_name', 'last_name', 'email', 'phone_no']
+        fields = ['id', 'first_name', 'last_name','username','profile_picture','type']
 
 class ChatSerializer(serializers.ModelSerializer):
     members = serializers.PrimaryKeyRelatedField(
@@ -26,6 +45,16 @@ class ChatSerializer(serializers.ModelSerializer):
     chat_name = serializers.SerializerMethodField()
     all_messages = serializers.SerializerMethodField()
     unread_messages = serializers.SerializerMethodField()
+    group_icon = serializers.SerializerMethodField()
+    
+    def get_group_icon(self, obj):
+        request = self.context.get('request')
+        if obj.group_icon and hasattr(obj.group_icon, 'url'):
+            if request is not None:
+                return request.build_absolute_uri(obj.group_icon.url)
+            else:
+                return obj.group_icon.url
+        return None
     
     def create(self, validated_data):
         members = validated_data.pop('members', [])
@@ -36,10 +65,13 @@ class ChatSerializer(serializers.ModelSerializer):
 
     def get_group_members(self, obj):
         members = obj.members.all()
-        serializer = ChatMemberSerializer(members, many=True)
+        serializer = ChatMemberSerializer(members, many=True,context={
+            'request': self.context.get('request'),
+            'chat': obj  
+        })
         return {
             'members': serializer.data,
-            'total_members': members.count()
+            'total_members': members.count()            
         }
 
     def get_chat_name(self, obj):
@@ -74,7 +106,7 @@ class ChatSerializer(serializers.ModelSerializer):
         model = ChatModel
         fields = [
             'id', 'chat_id', 'group_name','group_members','is_single_chat', 'created_on', 'updated_at',
-            'created_by', 'members', 'chat_name', 'all_messages', 'unread_messages'
+            'created_by', 'members', 'chat_name', 'all_messages', 'unread_messages','group_icon'
         ]
 
 class MessageSerializer(serializers.ModelSerializer):

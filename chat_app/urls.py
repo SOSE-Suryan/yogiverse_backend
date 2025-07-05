@@ -4,7 +4,8 @@ from .views import *
 
 urlpatterns = [
     path('chats/', ChatAPI.as_view(), name='chats'),
-    path('chats/<uuid:id>/', ChatAPI.as_view(), name='chats'),
+    path('chats/<uuid:id>/', ChatAPI.as_view(), name='chat'),
+    path('delete_chats/<uuid:id>/', ChatAPI.as_view(), name='chat'),
     path('read_msg/<int:id>/', ReadChatMsgAPI.as_view(), name='read_msg'),
     path('message/', MessageAPI.as_view(), name='message'),
     path('message/<int:id>/', MessageAPI.as_view(), name='message'),

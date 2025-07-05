@@ -4,6 +4,7 @@ from post_app.Serializer.PostSerializer import PostSerializer
 from user_app.models import ProfileModel
 from user_app.Serializer.UserSerializer import ProfileSerializer 
 
+
 class ReelSerializer(serializers.ModelSerializer):
     like_count = serializers.SerializerMethodField(read_only=True)
     comment_count = serializers.SerializerMethodField(read_only=True)
@@ -62,6 +63,19 @@ class CombinedFeedSerializer(serializers.Serializer):
     is_like = serializers.SerializerMethodField()
     is_collection = serializers.SerializerMethodField()
     collection_id = serializers.SerializerMethodField()
+    
+    
+    # def get_unread_message_count(self,obj):
+    #     request = self.context.get('request')
+    #     user = getattr(request, 'user', None)
+        
+    #     if not user or not user.is_authenticated:
+    #         return 0
+    #     return MessageModel.objects.filter(
+    #         chat__members=user,
+    #         is_read=False
+    #     ).exclude(sender=user).count()
+        # return obj.messages.filter(is_read=False).exclude(sender=user).count()
 
     def _get_collection_item(self, obj):
         """Private method to get CollectionItem instance once per object."""

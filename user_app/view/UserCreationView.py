@@ -12,6 +12,9 @@ from post_app.Serializer.PostSerializer import PostSerializer
 from post_app.Serializer.ReelSerializer import ReelSerializer
 from follower_app.serializers import FollowerSerializer
 import logging
+from chat_app.models import ChatModel
+from django.db.models import Count
+
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -217,6 +220,26 @@ class UserProfileView(APIView):
                 else:
                     vendor_profile_serializer = None
                     
+                #Get chat
+                # chat = (
+                #     ChatModel.objects
+                #     .filter(members=user)
+                #     .filter(members=request.user)
+                #     .annotate(num_members=Count('members'))
+                #     .filter(num_members=2)  # ensures it's only a 1-to-1 chat
+                #     .first()
+                # )
+                
+                chat = (
+                ChatModel.objects
+                .filter(is_single_chat=True, members__in=[request.user, user])
+                .annotate(num_members=Count('members'))
+                .filter(num_members=2)
+                .first()
+                        )
+
+                chat_id = str(chat.chat_id) if chat else None
+                is_chat = bool(chat)
                 # Get posts and reels
                 posts = Post.objects.filter(user=user)
                 reels = Reel.objects.filter(user=user)
@@ -304,6 +327,8 @@ class UserProfileView(APIView):
                         'post_reels_count': post_reels_count,
                         'vendor_profile': vendor_profile_serializer.data if vendor_profile_serializer else None,
                         'role': user.role,
+                        'chat_id':chat_id,
+                        'is_chat':is_chat,
                         'profile': profile_serializer.data,
                         'posts': posts_serializer.data,
                         'reels': reels_serializer.data,

@@ -2,6 +2,8 @@ from channels.consumer import AsyncConsumer, StopConsumer
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
 import json
+import base64
+from django.core.files.base import ContentFile
 
 class AsyncChatConsumer(AsyncConsumer):
     async def websocket_connect(self, event):
@@ -36,8 +38,10 @@ class AsyncChatConsumer(AsyncConsumer):
 
         if not self.chat_id:
             return json.dumps({"error": "Chat ID is required"})
+        
+        MessageModel.objects.filter(chat__chat_id=self.chat_id).update(is_read=True)
+        
         latest_messages = MessageModel.objects.filter(chat__chat_id=self.chat_id).order_by('sent_at')
-
         serializer = MessageSerializer(latest_messages, many=True, context={'request': None})
         return json.dumps(serializer.data)
 
@@ -51,15 +55,21 @@ class AsyncChatConsumer(AsyncConsumer):
             chat=conversation,
         )
         if files:
-            file_obj = ChatAttachmentModel.objects.create(
-                sender=employee,
-                chat=conversation,
-                attachment=files
-            )
-            message.files_attachment.add(file_obj)
-            message.message = message.message or settings.MEDIA_URL + file_obj.attachment.url
+            for file_data in files: 
+                name = file_data['name']
+                data = file_data['data']
+                if ',' in data:
+                    data = data.split(',')[1]
+                file_content = ContentFile(base64.b64decode(data), name=name)
+                file_obj = ChatAttachmentModel.objects.create(
+                    sender=employee,
+                    chat=conversation,
+                    attachment=file_content  # expects FileField
+                )
+                message.files_attachment.add(file_obj)
             message.save()
         return message
+
 
     @database_sync_to_async
     def serialize_message(self, message):
@@ -93,12 +103,14 @@ class AsyncChatConsumer(AsyncConsumer):
             })
         elif query_type == "send_message":
             message_content = query_dict.get('content')
+            files = query_dict.get('files', None)
+
             try:
                 from user_app.models import UserModel
                 from .models import ChatModel
                 employee = await database_sync_to_async(UserModel.objects.get)(id=user.id)
                 conversation = await database_sync_to_async(ChatModel.objects.get)(chat_id=self.chat_id)
-                message = await self.save_message(message_content, employee, conversation)
+                message = await self.save_message(message_content, employee, conversation,files=files)
                 serialized_data = await self.serialize_message(message)
 
                 # Broadcast the message to the group

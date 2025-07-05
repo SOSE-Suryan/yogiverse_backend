@@ -18,7 +18,7 @@ urlpatterns = [
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
     path('deactivate/', DeactivateAccountAPI.as_view(), name='deactivate'),
-    path('delete-account/', DeleteAccountAPI.as_view(), name='delete-account'),
+    # path('delete-account/', DeleteAccountAPI.as_view(), name='delete-account'),
     
     path('change-password/', ChangePasswordView.as_view(), name='change_password'),
     path('reset-password/', ResetPasswordSendLinkView.as_view(),name='reset_password'),

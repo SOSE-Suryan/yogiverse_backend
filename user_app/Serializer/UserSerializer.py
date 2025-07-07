@@ -146,6 +146,7 @@ class UserSerializer(serializers.ModelSerializer):
     country = serializers.PrimaryKeyRelatedField(queryset=CountryModel.objects.all(), required=False, allow_null=True)
     state = serializers.PrimaryKeyRelatedField(queryset=StatesModel.objects.all(), required=False, allow_null=True)
     city = serializers.PrimaryKeyRelatedField(queryset=CitiesModel.objects.all(), required=False, allow_null=True)
+    profile_picture = serializers.SerializerMethodField()
     
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -155,12 +156,18 @@ class UserSerializer(serializers.ModelSerializer):
         data['city'] = instance.city.name if instance.city else None
         return data
     
+    def get_profile_picture(self, obj):
+        # Check if user has a profile and profile_picture
+        profile = getattr(obj, 'profile', None)
+        if profile and profile.profile_picture:
+            return profile.profile_picture.url
+        return None
     class Meta:
         model = UserModel
         fields = [
             'id', 'email', 'username', 'password',
             'first_name', 'last_name', 'role',
-            'phone_no', 'country', 'state', 'city'
+            'phone_no', 'country', 'state', 'city','profile_picture'
         ]
         
     def create(self, validated_data):

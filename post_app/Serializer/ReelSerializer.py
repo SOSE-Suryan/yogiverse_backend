@@ -114,69 +114,6 @@ class CombinedFeedSerializer(serializers.Serializer):
         
         return is_like
     
-    
-    # def get_unread_message_count(self,obj):
-    #     request = self.context.get('request')
-    #     user = getattr(request, 'user', None)
-        
-    #     if not user or not user.is_authenticated:
-    #         return 0
-    #     return MessageModel.objects.filter(
-    #         chat__members=user,
-    #         is_read=False
-    #     ).exclude(sender=user).count()
-        # return obj.messages.filter(is_read=False).exclude(sender=user).count()
-
-    def _get_collection_item(self, obj):
-        """Private method to get CollectionItem instance once per object."""
-        if hasattr(obj, '_collection_item'):
-            return obj._collection_item
-
-        request = self.context.get('request')
-        user = getattr(request, 'user', None)
-        
-        if not user or not user.is_authenticated:
-            obj._collection_item = None
-            return None
-
-        content_type = ContentType.objects.get_for_model(obj._meta.model)
-        item = CollectionItem.objects.filter(
-            content_type=content_type,
-            object_id=obj.id,
-            is_collection=True,
-            collection__user=user  # if collection is user-specific
-        ).first()
-
-        obj._collection_item = item
-        return item
-
-    def get_is_collection(self, obj):
-        return bool(self._get_collection_item(obj))
-
-    def get_collection_id(self, obj):
-        collection_item = self._get_collection_item(obj)
-        return collection_item.collection.id if collection_item else None
-
-    # def get_is_collection(self,obj):
-    #     request = self.context.get('request')         
-    #     user = getattr(request, 'user', None)
-    #     if not user or not user.is_authenticated:
-    #         return False
-
-    #     content_type = ContentType.objects.get_for_model(obj._meta.model)
-
-    #     is_collection= CollectionItem.objects.filter(
-    #         content_type=content_type,
-    #         object_id=obj.id,
-    #         is_collection=True
-    #     ).exists()
-        
-    #     return is_collection
-        
-    #     # return {
-    #     #     "is_collection": is_collection,
-    #     #     "collection_id":is_collection.collection
-    #     # }
         
     def get_is_like(self, obj):
 

@@ -268,7 +268,6 @@ class ChatAPI(APIView,ChatDefaultPaginationClass):
 
             # SINGLE CHAT LOGIC
             elif chat.is_single_chat:
-                print('aa api dlt ni chee')
                 chat.deleted_for.add(request.user)
                 # If all members have deleted the chat, remove it from DB
                 all_members = chat.members.all()

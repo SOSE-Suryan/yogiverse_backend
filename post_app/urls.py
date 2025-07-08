@@ -12,11 +12,13 @@ from post_app.View.RecentSearchViews import RecentSearchCreateAPIView, RecentSea
 from post_app.View.RelatedContentViews import RelatedContentAPIView
 from post_app.View.ShareContentViews import ShareContentAPIView
 from post_app.View.HomePageViews import CombinedFeedAPIView
+from post_app.View.HighlightsViews import HighlightViewSet
 
 router = DefaultRouter()
 router.register(r'posts', PostViewSet, basename='posts')
 router.register(r'reels', ReelViewSet, basename='reels')
 router.register(r'stories', StoryViewSet, basename='stories')
+router.register(r'highlights', HighlightViewSet, basename='highlight')
 
 urlpatterns = [
     path('', include(router.urls)),

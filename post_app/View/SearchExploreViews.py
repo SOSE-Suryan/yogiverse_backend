@@ -41,7 +41,7 @@ class SearchExploreAPIView(GenericAPIView):
             Q(first_name__icontains=query) |
             Q(last_name__icontains=query) |
             Q(email__icontains=query)
-        ).distinct().order_by('-id')
+        ).distinct().order_by('-id').select_related('profile')
        
         post_results = PostSerializer(post_qs, many=True).data
         reel_results = ReelSerializer(reel_qs, many=True).data

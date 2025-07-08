@@ -8,6 +8,10 @@ from django.utils.text import slugify
 import uuid
 import string
 import random
+import subprocess
+import os
+from django.core.files.base import ContentFile
+
 
 
 # Common helper model
@@ -207,3 +211,14 @@ class RecentSearch(TimeStampedModel):
 
     def __str__(self):
         return f"{self.user.username} searched {self.query or self.content_object}"
+
+class HighlightModel(models.Model):
+    user = models.ForeignKey(UserModel, on_delete=models.CASCADE, related_name='highlights')
+    title = models.CharField(max_length=100)
+    cover_image = models.ImageField(upload_to='highlights/covers/', null=True, blank=True)
+    cover_story = models.ForeignKey(Story, on_delete=models.SET_NULL, null=True, blank=True, related_name='+')
+    created_at = models.DateTimeField(auto_now_add=True)
+    stories = models.ManyToManyField(Story, related_name='in_highlights')
+
+    def __str__(self):
+        return f"{self.user.username} - {self.title}"

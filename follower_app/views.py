@@ -300,12 +300,70 @@ class UnfollowUserView(APIView):
             'data': None
         }, status=status.HTTP_200_OK)
 
+class RemoveFollowerView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        """
+        Remove a follower from the current user's followers list
+        This allows users to remove followers from their profile
+        """
+        follower_id = request.data.get('follower_id')
+        if not follower_id:
+            return Response({
+                'success': False,
+                'message': 'follower_id is required',
+                'data': None
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            follower_user = get_object_or_404(User, id=follower_id)
+        except ValueError:
+            return Response({
+                'success': False,
+                'message': 'Invalid follower_id format',
+                'data': None
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Check if this user is actually following the current user
+        follower_relationship = Follower.objects.filter(
+            follower=follower_user, 
+            following=request.user,
+            status='approved'
+        ).first()
+        
+        if not follower_relationship:
+            return Response({
+                'success': False,
+                'message': 'This user is not following you',
+                'data': None
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Delete the follower relationship
+        follower_relationship.delete()
+        
+        # Send WebSocket updates for both users
+        send_follow_count_updates(request.user.id)
+        send_follow_count_updates(follower_user.id)
+        
+        logger.info(f"User {request.user.id} removed follower {follower_id}")
+
+        return Response({
+            'success': True,
+            'message': 'Follower removed successfully',
+            'data': {
+                'removed_follower_id': follower_id,
+                'removed_follower_username': follower_user.username
+            }
+        }, status=status.HTTP_200_OK)
+
 class FollowingListView(APIView):
     permission_classes = [IsAuthenticated]
     pagination_class = StandardResultsSetPagination
 
     def get(self, request,id=None):
         user_id = self.request.GET.get('user_id')
+        search_query = self.request.GET.get('search', '').strip()
         
         # user_id = id if id is not None else request.user.id  Add commentMore actions
         # user = request.user
@@ -317,6 +375,16 @@ class FollowingListView(APIView):
         #     except User.DoesNotExist:Add commentMore actions
         #         return Response({'detail': 'User not found.'}, status=404)  
         following = Follower.objects.filter(follower=user_id if user_id else request.user, status='approved')
+        
+        # Add search functionality
+        if search_query:
+            following = following.filter(
+                Q(following__username__icontains=search_query) |
+                Q(following__first_name__icontains=search_query) |
+                Q(following__last_name__icontains=search_query)
+            )
+            logger.info(f"Searching following list for user {request.user.id} with query: {search_query}")
+        
         paginator = self.pagination_class()
         paginated_following = paginator.paginate_queryset(following, request)
         serializer = FollowerSerializer(paginated_following, many=True)
@@ -328,6 +396,8 @@ class FollowersListView(APIView):
 
     def get(self, request):
         user_id = self.request.GET.get('user_id')
+        search_query = self.request.GET.get('search', '').strip()
+        
          # user_id = id if id is not None else request.user.idAdd commentMore actions
         # user = request.user
         # if id is not None:
@@ -338,6 +408,16 @@ class FollowersListView(APIView):
         #     except User.DoesNotExist:
         #         return Response({'detail': 'User not found.'}, status=404)
         followers = Follower.objects.filter(following=user_id if user_id else request.user, status='approved')
+        
+        # Add search functionality
+        if search_query:
+            followers = followers.filter(
+                Q(follower__username__icontains=search_query) |
+                Q(follower__first_name__icontains=search_query) |
+                Q(follower__last_name__icontains=search_query)
+            )
+            logger.info(f"Searching followers list for user {request.user.id} with query: {search_query}")
+        
         paginator = self.pagination_class()
         paginated_followers = paginator.paginate_queryset(followers, request)
         serializer = FollowerSerializer(paginated_followers, many=True)
@@ -348,7 +428,18 @@ class PendingFollowRequestsView(APIView):
     pagination_class = StandardResultsSetPagination
 
     def get(self, request):
+        search_query = self.request.GET.get('search', '').strip()
         pending_requests = Follower.objects.filter(following=request.user, status='pending')
+        
+        # Add search functionality
+        if search_query:
+            pending_requests = pending_requests.filter(
+                Q(follower__username__icontains=search_query) |
+                Q(follower__first_name__icontains=search_query) |
+                Q(follower__last_name__icontains=search_query)
+            )
+            logger.info(f"Searching pending follow requests for user {request.user.id} with query: {search_query}")
+        
         paginator = self.pagination_class()
         paginated_requests = paginator.paginate_queryset(pending_requests, request)
         serializer = FollowerSerializer(paginated_requests, many=True)
@@ -359,7 +450,20 @@ class NotificationListView(APIView):
     pagination_class = StandardResultsSetPagination
 
     def get(self, request):
+        search_query = self.request.GET.get('search', '').strip()
         notifications = FirebaseNotification.objects.filter(user=request.user)
+        
+        # Add search functionality
+        if search_query:
+            notifications = notifications.filter(
+                Q(title__icontains=search_query) |
+                Q(body__icontains=search_query) |
+                Q(sender__username__icontains=search_query) |
+                Q(sender__first_name__icontains=search_query) |
+                Q(sender__last_name__icontains=search_query)
+            )
+            logger.info(f"Searching notifications for user {request.user.id} with query: {search_query}")
+        
         paginator = self.pagination_class()
         paginated_notifications = paginator.paginate_queryset(notifications, request)
         serializer = FirebaseNotificationSerializer(paginated_notifications, many=True)

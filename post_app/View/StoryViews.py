@@ -27,29 +27,46 @@ class StoryViewSet(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         now = timezone.now()
         user = request.user
-
+        user_id = request.query_params.get('user_id')
+        
+        if user_id:
+            try:
+                user_obj = UserModel.objects.get(id=user_id)
+            except UserModel.DoesNotExist:
+                return Response({
+                    "success": False,
+                    "message": "User not found."
+                }, status=status.HTTP_404_NOT_FOUND)
+            stories = Story.objects.filter(user=user_obj, expires_at__gt=now).order_by('-created_at')
+            serializer = self.get_serializer(stories, many=True)
+            return Response({
+                "success": True,
+                "message": "stories retrieved",
+                "data": serializer.data
+            }, status=status.HTTP_200_OK)
+        else:
         # Own stories
-        user_stories = Story.objects.filter(user=user, expires_at__gt=now)
-        # Others' stories
-        # Get approved followings (users this user follows)
-        following_users = UserModel.objects.filter(
-            id__in=Follower.objects.filter(follower=user, status='approved').values_list('following_id', flat=True)
-        )
-        others = Story.objects.filter(user__in=following_users, expires_at__gt=now).exclude(user=user)
+            user_stories = Story.objects.filter(user=user, expires_at__gt=now)
+            # Others' stories
+            # Get approved followings (users this user follows)
+            following_users = UserModel.objects.filter(
+                id__in=Follower.objects.filter(follower=user, status='approved').values_list('following_id', flat=True)
+            )
+            others = Story.objects.filter(user__in=following_users, expires_at__gt=now).exclude(user=user)
 
-        # Separate viewed and unviewed
-        viewed_story_ids = StoryView.objects.filter(viewer=user).values_list('story_id', flat=True)
-        unviewed_stories = others.exclude(id__in=viewed_story_ids)
-        viewed_stories = others.filter(id__in=viewed_story_ids)
+            # Separate viewed and unviewed
+            viewed_story_ids = StoryView.objects.filter(viewer=user).values_list('story_id', flat=True)
+            unviewed_stories = others.exclude(id__in=viewed_story_ids)
+            viewed_stories = others.filter(id__in=viewed_story_ids)
 
-        combined_queryset = list(user_stories) + list(unviewed_stories.order_by('-created_at')) + list(viewed_stories.order_by('-created_at'))
-        serializer = self.get_serializer(combined_queryset, many=True)
+            combined_queryset = list(user_stories) + list(unviewed_stories.order_by('-created_at')) + list(viewed_stories.order_by('-created_at'))
+            serializer = self.get_serializer(combined_queryset, many=True)
 
-        return Response({
-            "success": True,
-            "message": "stories retrieved",
-            "data": serializer.data
-        }, status=status.HTTP_200_OK)
+            return Response({
+                "success": True,
+                "message": "stories retrieved",
+                "data": serializer.data
+            }, status=status.HTTP_200_OK)
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()  # Permission checked by IsOwnerOrReadOnly

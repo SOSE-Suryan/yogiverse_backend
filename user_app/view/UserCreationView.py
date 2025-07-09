@@ -6,10 +6,11 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.db import transaction
 import ast
-from post_app.models import Post,Reel
+from post_app.models import Post,Reel,Story
 from follower_app.models import Follower
 from post_app.Serializer.PostSerializer import PostSerializer
 from post_app.Serializer.ReelSerializer import ReelSerializer
+from post_app.Serializer.StorySerializer import StorySerializer
 from follower_app.serializers import FollowerSerializer
 import logging
 from chat_app.models import ChatModel
@@ -243,10 +244,12 @@ class UserProfileView(APIView):
                 # Get posts and reels
                 posts = Post.objects.filter(user=user)
                 reels = Reel.objects.filter(user=user)
-
+                now = timezone.now()
+                stories = Story.objects.filter(user=user,expires_at__gt=now)
                 posts_serializer = PostSerializer(posts, many=True)
                 reels_serializer = ReelSerializer(reels, many=True)
-
+                stories_serializer = StorySerializer(stories, many=True,context={'request': request})
+            
                 # Get followers/following counts - only count approved relationships
                 # user.followers = users who follow this user (following field in Follower model)
                 # user.following = users this user follows (follower field in Follower model)
@@ -332,6 +335,7 @@ class UserProfileView(APIView):
                         'profile': profile_serializer.data,
                         'posts': posts_serializer.data,
                         'reels': reels_serializer.data,
+                        'stories':stories_serializer.data,
                         'followers_count': followers_count,
                         'following_count': following_count,
                         'is_following': is_following,

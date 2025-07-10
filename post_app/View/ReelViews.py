@@ -25,7 +25,7 @@ class ReelViewSet(viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         # Return only the logged-in user's reels
-        queryset = self.filter_queryset(self.get_queryset().filter(user=request.user))
+        queryset = self.filter_queryset(self.get_queryset().filter(user=request.user,is_draft=False))
         rows = request.query_params.get('rows_per_page')
         self.paginator.page_size = int(rows) if rows else self.paginator.page_size
 

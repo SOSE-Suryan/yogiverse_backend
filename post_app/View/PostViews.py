@@ -30,7 +30,7 @@ class PostViewSet(viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         self.serializer_class = PostSerializer
-        queryset = self.filter_queryset(self.get_queryset().filter(user=request.user))
+        queryset = self.filter_queryset(self.get_queryset().filter(user=request.user,is_draft=False))
         query_params = request.query_params.get('rows_per_page')
         self.paginator.page_size = int(query_params) if query_params else self.paginator.page_size
         # Pagination logic start

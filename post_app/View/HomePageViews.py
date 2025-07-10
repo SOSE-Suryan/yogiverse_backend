@@ -36,8 +36,8 @@ class CombinedFeedAPIView(generics.ListAPIView):
         target_user_ids = list(dict.fromkeys(target_user_ids))
 
         # Step 4: Fetch Posts and Reels from those users
-        posts = Post.objects.filter(user_id__in=target_user_ids).order_by('-created_at')
-        reels = Reel.objects.filter(user_id__in=target_user_ids).order_by('-created_at')
+        posts = Post.objects.filter(user_id__in=target_user_ids,is_draft=False).order_by('-created_at')
+        reels = Reel.objects.filter(user_id__in=target_user_ids,is_draft=False).order_by('-created_at')
         
         unread_message_count =MessageModel.objects.filter(
             chat__members=user,

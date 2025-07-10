@@ -9,6 +9,9 @@ class HighlightViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
+        user_id = self.request.query_params.get('user_id')
+        if user_id:
+            return HighlightModel.objects.filter(user__id=user_id).order_by('-created_at')
         # Show highlights of the authenticated user
         return HighlightModel.objects.filter(user=self.request.user).order_by('-created_at')
 

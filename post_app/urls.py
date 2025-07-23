@@ -13,6 +13,10 @@ from post_app.View.RelatedContentViews import RelatedContentAPIView
 from post_app.View.ShareContentViews import ShareContentAPIView
 from post_app.View.HomePageViews import CombinedFeedAPIView
 from post_app.View.HighlightsViews import HighlightViewSet
+from post_app.View.UserMentionSearchView import UserMentionSearchView
+from post_app.View.DraftListViews import DraftListAPIView
+from post_app.View.PostReelViews import PostReelListAPIView
+from post_app.View.MentionedViews import MentionedAPIView
 
 router = DefaultRouter()
 router.register(r'posts', PostViewSet, basename='posts')
@@ -45,5 +49,14 @@ urlpatterns = [
 
     path('stories/<int:story_id>/view/', StoryViewCreateAPIView.as_view(), name='story-view'),
     path('stories/<int:story_id>/viewers/', StoryViewersListAPIView.as_view(), name='story-viewers'),
+    
+    path('users/search/', UserMentionSearchView.as_view(), name='user-mention-search'),
+    
+    path('is_draft/', DraftListAPIView.as_view(), name='draf-data'),
+    path('post_reel_feed/', PostReelListAPIView.as_view(), name='draft-data'),
+    path('mentioned_user/', MentionedAPIView.as_view(), name='mentioned-user'),
+    path('remove-mention/', MentionedAPIView.as_view(), name='remove-mention'),
+    
+
 
 ]

@@ -1,12 +1,14 @@
 from rest_framework import viewsets, permissions
-from post_app.models import Post, Reel, Story
+from post_app.models import Post, Reel, Story,MentionModel
 from post_app.Serializer.PostSerializer import PostSerializer
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from post_app.Filters.PostFilter import PostsFilter
 from post_app.Paginations.Paginations import MainPagination
 from rest_framework import status
-
+from post_app.utils.mentions import save_mentions
+from user_app.models import UserModel
+from django.contrib.contenttypes.models import ContentType
 
 class IsOwnerOrReadOnly(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
@@ -53,6 +55,11 @@ class PostViewSet(viewsets.ModelViewSet):
 
         if serializer.is_valid():
             self.perform_create(serializer)
+            post_instance = serializer.instance
+            # mentions = request.data.get('mentions', []) 
+            mentions = request.data.getlist('mentions')
+            save_mentions(request.user, mentions, post_instance)
+
             data = serializer.data
             return Response({"success": True, "message": "record created", "data": data}, status=status.HTTP_201_CREATED)
         else:
@@ -71,6 +78,10 @@ class PostViewSet(viewsets.ModelViewSet):
     def partial_update(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=True)
+        updated_instance = serializer.instance
+        mentions = request.data.get('mentions', [])
+        # mentions = request.data.getlist('mentions')
+        save_mentions(request.user, mentions, updated_instance)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response({"success": True, "message": "record updated", "data": serializer.data}, status=status.HTTP_200_OK)

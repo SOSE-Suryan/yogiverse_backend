@@ -222,3 +222,16 @@ class HighlightModel(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.title}"
+    
+    
+    
+class MentionModel(models.Model):
+    mentioned_user = models.ForeignKey(UserModel, on_delete=models.CASCADE, related_name='mentions')
+    creator = models.ForeignKey(UserModel, on_delete=models.CASCADE, related_name='mentions_by')
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)  # Post, Reel, or Story
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey('content_type', 'object_id')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('mentioned_user', 'object_id')

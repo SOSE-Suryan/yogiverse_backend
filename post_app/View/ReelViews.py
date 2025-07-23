@@ -4,7 +4,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from post_app.models import Reel
 from post_app.Serializer.ReelSerializer import ReelSerializer
 from post_app.Paginations.Paginations import MainPagination
-
+from post_app.utils.mentions import save_mentions
 
 class IsOwnerOrReadOnly(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
@@ -48,6 +48,9 @@ class ReelViewSet(viewsets.ModelViewSet):
 
         if serializer.is_valid():
             self.perform_create(serializer)
+            post_instance = serializer.instance
+            mentions = request.data.getlist('mentions')
+            save_mentions(request.user, mentions, post_instance)
             return Response({"success": True, "message": "record created", "data": serializer.data}, status=status.HTTP_201_CREATED)
 
         errors = [v[0] for v in serializer.errors.values()]
@@ -65,6 +68,9 @@ class ReelViewSet(viewsets.ModelViewSet):
     def partial_update(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=True)
+        updated_instance = serializer.instance
+        mentions = request.data.get('mentions', [])
+        save_mentions(request.user, mentions, updated_instance)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response({"success": True, "message": "record updated", "data": serializer.data}, status=status.HTTP_200_OK)

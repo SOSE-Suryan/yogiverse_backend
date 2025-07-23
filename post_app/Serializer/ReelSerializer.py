@@ -10,16 +10,40 @@ class ReelSerializer(serializers.ModelSerializer):
     comment_count = serializers.SerializerMethodField(read_only=True)
     type = serializers.SerializerMethodField(read_only=True)
     profile = serializers.SerializerMethodField(read_only=True)
+    mentions = serializers.ListField(child=serializers.IntegerField(), required=False, write_only=True)
+    mentioned_users = serializers.SerializerMethodField(read_only=True)
+    is_mention = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Reel
         fields = [
             'id', 'user', 'profile','caption', 'video_file', 'duration', 'is_draft',
             'allow_comments', 'hide_like_count', 'music_track', 'created_at', 'updated_at',
-            'like_count', 'comment_count', 'type'
+            'like_count', 'comment_count', 'type','mentions','mentioned_users','is_mention'
         ]
         read_only_fields = ['id', 'user', 'created_at', 'updated_at']
         
+    def get_mentioned_users(self, obj):
+        from post_app.models import MentionModel
+        from django.contrib.contenttypes.models import ContentType
+        ctype = ContentType.objects.get_for_model(obj)
+        mentions = MentionModel.objects.filter(content_type=ctype, object_id=obj.id)
+        return [
+        {"id": m.mentioned_user.id, "username": m.mentioned_user.username,"slug":obj.slug}
+        for m in mentions
+    ]
+
+    def get_is_mention(self, obj):
+        request = self.context.get("request", None)
+        if not request or not hasattr(request, "user") or not request.user or not request.user.is_authenticated:
+            return False
+        from post_app.models import MentionModel
+        from django.contrib.contenttypes.models import ContentType
+        ctype = ContentType.objects.get_for_model(obj)
+        
+        mentions = MentionModel.objects.filter(content_type=ctype, object_id=obj.id,mentioned_user = request.user).exists()
+        return mentions 
+    
     def get_profile(self, obj):
         try:
             profile = obj.user.profile 
@@ -38,6 +62,7 @@ class ReelSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         validated_data.pop('tags', [])
+        validated_data.pop('mentions', [])
         validated_data['user'] = self.context['request'].user
         return Reel.objects.create(**validated_data)
 

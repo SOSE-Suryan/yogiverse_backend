@@ -138,7 +138,22 @@ class VendorProfileSlimSerializer(serializers.ModelSerializer):
             'logo',
             # 'vendor_banner'
         ]  
-          
+    
+class UserMentionSerializer(serializers.ModelSerializer):
+    profile_picture = serializers.SerializerMethodField()
+    def get_profile_picture(self, obj):
+        # Check if user has a profile and profile_picture
+        profile = getattr(obj, 'profile', None)
+        if profile and profile.profile_picture:
+            return profile.profile_picture.url
+        return None
+    
+    class Meta:
+        model = UserModel
+        fields = [
+            'id',  'username', 
+            'first_name', 'last_name', 'profile_picture']
+       
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
     role = serializers.ChoiceField(choices=UserModel.ROLE_CHOICES)

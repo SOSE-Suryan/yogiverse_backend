@@ -15,6 +15,7 @@ from follower_app.serializers import FollowerSerializer
 import logging
 from chat_app.models import ChatModel
 from django.db.models import Count
+from operator import itemgetter
 
 
 # Configure logging
@@ -242,14 +243,21 @@ class UserProfileView(APIView):
                 chat_id = str(chat.chat_id) if chat else None
                 is_chat = bool(chat)
                 # Get posts and reels
-                posts = Post.objects.filter(user=user)
-                reels = Reel.objects.filter(user=user)
+                posts = Post.objects.filter(user=user,is_draft=False)
+                reels = Reel.objects.filter(user=user,is_draft=False)
                 now = timezone.now()
                 stories = Story.objects.filter(user=user,expires_at__gt=now)
-                posts_serializer = PostSerializer(posts, many=True)
-                reels_serializer = ReelSerializer(reels, many=True)
-                stories_serializer = StorySerializer(stories, many=True,context={'request': request})
+                posts_serializer = PostSerializer(posts, many=True).data
+                reels_serializer = ReelSerializer(reels, many=True).data
+                stories_serializer = StorySerializer(stories, many=True,context={'request': request}).data
             
+            
+                combined = posts_serializer + reels_serializer
+                for item in posts_serializer:
+                    item['type'] = 'post'
+                for item in reels_serializer:
+                    item['type'] = 'reel'
+                combined_sorted = sorted(combined, key=itemgetter('created_at'), reverse=True)
                 # Get followers/following counts - only count approved relationships
                 # user.followers = users who follow this user (following field in Follower model)
                 # user.following = users this user follows (follower field in Follower model)
@@ -333,9 +341,9 @@ class UserProfileView(APIView):
                         'chat_id':chat_id,
                         'is_chat':is_chat,
                         'profile': profile_serializer.data,
-                        'posts': posts_serializer.data,
-                        'reels': reels_serializer.data,
-                        'stories':stories_serializer.data,
+                        'posts': combined_sorted,
+                        'reels': reels_serializer,
+                        'stories':stories_serializer,
                         'followers_count': followers_count,
                         'following_count': following_count,
                         'is_following': is_following,

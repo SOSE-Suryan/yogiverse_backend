@@ -6,6 +6,7 @@ from user_app.models import ProfileModel
 from user_app.Serializer.UserSerializer import ProfileSerializer 
 from post_app.models import Post, PostMedia,CollectionItem,ContentType
 
+
 class PostMediaSerializer(serializers.ModelSerializer):
     class Meta:
         model = PostMedia
@@ -22,6 +23,10 @@ class PostSerializer(serializers.ModelSerializer):
         slug_field='name'
     )
     profile = serializers.SerializerMethodField(read_only=True)
+    
+    mentions = serializers.ListField(child=serializers.IntegerField(), required=False, write_only=True)
+    mentioned_users = serializers.SerializerMethodField(read_only=True)
+    is_mention = serializers.SerializerMethodField(read_only=True)
     
     # is_collection = serializers.SerializerMethodField()Add commentMore actions
     # collection_id = serializers.SerializerMethodField()
@@ -90,10 +95,33 @@ class PostSerializer(serializers.ModelSerializer):
         model = Post
         fields = [
             'id', 'user','profile', 'caption', 'is_draft', 'allow_comments', 'hide_like_count',
-            'location', 'media', 'created_at', 'updated_at',
-            'like_count', 'comment_count', 'type', 'tags',
+            'location', 'media', 'created_at', 'updated_at','slug',
+            'like_count', 'comment_count', 'type', 'tags', 'mentions','mentioned_users','is_mention'
         ]
         read_only_fields = ['id', 'user', 'created_at', 'updated_at']
+        
+    
+    def get_mentioned_users(self, obj):
+        from post_app.models import MentionModel
+        from django.contrib.contenttypes.models import ContentType
+        ctype = ContentType.objects.get_for_model(obj)
+        mentions = MentionModel.objects.filter(content_type=ctype, object_id=obj.id)
+        return [
+        {"id": m.mentioned_user.id, "username": m.mentioned_user.username,"slug":obj.slug}
+        for m in mentions
+    ]
+
+    def get_is_mention(self, obj):
+        request = self.context.get("request", None)
+        if not request or not hasattr(request, "user") or not request.user or not request.user.is_authenticated:
+            return False
+        from post_app.models import MentionModel
+        from django.contrib.contenttypes.models import ContentType
+        ctype = ContentType.objects.get_for_model(obj)
+        
+        mentions = MentionModel.objects.filter(content_type=ctype, object_id=obj.id,mentioned_user = request.user).exists()
+        return mentions
+        
 
     def get_profile(self, obj):
         try:
@@ -124,6 +152,7 @@ class PostSerializer(serializers.ModelSerializer):
         user = request.user
 
         # Remove media if present in validated_data
+        validated_data.pop('mentions', [])
         validated_data.pop('media', None)
         validated_data.pop('tags', [])
 

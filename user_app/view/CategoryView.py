@@ -10,7 +10,7 @@ from user_app.paginations import DefaultPaginationClass
 class MainSubCategoryAPI(APIView, DefaultPaginationClass):
     def get(self, request, pk=None):
         if pk:
-            category = MainCategoryModel.objects.prefetch_related('subcategories').get(pk=pk)
+            category = MainCategoryModel.objects.order_by('sequence').prefetch_related('subcategories').get(pk=pk)
             serializer = MainCategoryWithSubSerializer(category)
             return Response({
                 "status": True,
@@ -24,7 +24,7 @@ class MainSubCategoryAPI(APIView, DefaultPaginationClass):
 
         filter_search = request.GET.get('filter_search')
         if filter_search:
-            categories = MainCategoryModel.objects.filter(name__icontains=filter_search).prefetch_related('subcategories')
+            categories = MainCategoryModel.objects.filter(name__icontains=filter_search).order_by('sequence').prefetch_related('subcategories')
             serializer = MainCategoryWithSubSerializer(categories, many=True)
             return Response({
                 "status": True,
@@ -38,7 +38,7 @@ class MainSubCategoryAPI(APIView, DefaultPaginationClass):
             search_query = Q()
             for term in search_terms:
                 search_query |= Q(name__icontains=term)
-            categories = MainCategoryModel.objects.filter(search_query).prefetch_related('subcategories')
+            categories = MainCategoryModel.objects.filter(search_query).order_by('sequence').prefetch_related('subcategories')
             paginated = self.paginate_queryset(categories, request, view=self)
             serializer = MainCategoryWithSubSerializer(paginated, many=True)
             paginated_response = self.get_paginated_response(serializer.data).data
@@ -50,7 +50,7 @@ class MainSubCategoryAPI(APIView, DefaultPaginationClass):
                 "message": "Categories successfully displayed"
             }, status=status.HTTP_200_OK)
 
-        categories = MainCategoryModel.objects.prefetch_related('subcategories').all()
+        categories = MainCategoryModel.objects.order_by('sequence').prefetch_related('subcategories').all()
         paginated = self.paginate_queryset(categories, request, view=self)
         serializer = MainCategoryWithSubSerializer(paginated, many=True)
         paginated_response = self.get_paginated_response(serializer.data).data

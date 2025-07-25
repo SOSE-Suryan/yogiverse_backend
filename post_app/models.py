@@ -153,9 +153,15 @@ class Story(TimeStampedModel):
     caption = models.CharField(max_length=2200, blank=True)
     expires_at = models.DateTimeField()
     is_highlighted = models.BooleanField(default=False)  # For future Highlights feature
-
+    slug = models.SlugField(unique=True, blank=True)
+    mention_user_data = models.CharField(blank=True)
     def __str__(self):
         return f"{self.user.first_name} {self.user.last_name}'s Story"
+    
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = generate_unique_slug(Story)
+        super().save(*args, **kwargs)
 
 
 class StoryView(models.Model):

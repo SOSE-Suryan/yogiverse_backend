@@ -50,6 +50,7 @@ class ChatAPI(APIView,ChatDefaultPaginationClass):
                             .annotate(last_message_time=Max('messages__sent_at'))  # Use your MessageModel related_name and time field
                             .order_by('-last_message_time')
                             )
+
                 if search_chat:
                     chat_data = ChatModel.objects.filter(group_name__icontains=search_chat,members__in= is_user).exclude(deleted_for=request.user)
                     paginated_chats = self.paginate_queryset(chat_data, request, view=self)

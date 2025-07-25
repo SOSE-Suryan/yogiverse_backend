@@ -105,7 +105,11 @@ class ProfileExternalLinkModel(models.Model):
 class MainCategoryModel(models.Model):
     name = models.CharField(max_length=50, unique=True)
     main_category_image=models.ImageField(upload_to='main_category_image/', blank=True, null=True)
+    sequence = models.PositiveSmallIntegerField(default=1, help_text="Display order")
     
+    class Meta:
+        ordering = ['sequence', 'name']  # Default order by sequence
+
     def __str__(self):
         return self.name
 
@@ -114,9 +118,11 @@ class SubCategoryModel(models.Model):
     name = models.CharField(max_length=50)
     main_category = models.ForeignKey(MainCategoryModel, on_delete=models.CASCADE, related_name="subcategories")
     sub_category_image=models.ImageField(upload_to='sub_category_image/', blank=True, null=True)
+    sequence = models.PositiveSmallIntegerField(default=1, help_text="Display order within main category")
 
     class Meta:
         unique_together = ('name', 'main_category')
+        ordering = ['main_category', 'sequence', 'name']
 
     def __str__(self):
         return f"{self.main_category.name} - {self.name}"  

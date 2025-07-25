@@ -141,6 +141,8 @@ class VendorProfileSlimSerializer(serializers.ModelSerializer):
     
 class UserMentionSerializer(serializers.ModelSerializer):
     profile_picture = serializers.SerializerMethodField()
+    chat_id = serializers.SerializerMethodField()
+    
     def get_profile_picture(self, obj):
         # Check if user has a profile and profile_picture
         profile = getattr(obj, 'profile', None)
@@ -148,11 +150,20 @@ class UserMentionSerializer(serializers.ModelSerializer):
             return profile.profile_picture.url
         return None
     
+    def get_chat_id(self, obj):
+        current_user = self.context['request'].user
+        from chat_app.models import ChatModel  # Use your actual ChatModel
+        chat = ChatModel.objects.filter(members=current_user).filter(members=obj).filter(is_single_chat=True).first()
+
+        if chat:
+            return chat.chat_id  # or chat.id as per your model
+        return None
+    
     class Meta:
         model = UserModel
         fields = [
             'id',  'username', 
-            'first_name', 'last_name', 'profile_picture']
+            'first_name', 'last_name', 'profile_picture', 'chat_id']
        
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)

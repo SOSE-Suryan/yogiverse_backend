@@ -23,15 +23,47 @@ class ReelSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'user', 'created_at', 'updated_at']
         
+    
     def get_mentioned_users(self, obj):
         from post_app.models import MentionModel
         from django.contrib.contenttypes.models import ContentType
+
+        # current_user = self.context['request'].user
+        request = self.context.get('request', None)
+        current_user = getattr(request, 'user', None)
+        from chat_app.models import ChatModel  # Use your actual ChatModel
+
         ctype = ContentType.objects.get_for_model(obj)
         mentions = MentionModel.objects.filter(content_type=ctype, object_id=obj.id)
-        return [
-        {"id": m.mentioned_user.id, "username": m.mentioned_user.username,"slug":obj.slug}
-        for m in mentions
-    ]
+        
+        
+        result = []   
+        for m in mentions: 
+            mentioned_user = m.mentioned_user
+            # Find a single chat (DM) between current_user and mentioned_user
+            chat_id = None
+            if current_user and current_user.is_authenticated and current_user != mentioned_user:
+                chat = ChatModel.objects.filter(
+                    members=current_user).filter(members=mentioned_user).filter(is_single_chat=True).first()
+                if chat:
+                    chat_id = str(chat.chat_id)
+            result.append({
+                "id": mentioned_user.id,
+                "username": mentioned_user.username,
+                "slug": obj.slug,
+                "chat_id": chat_id,
+            })
+        return result
+    
+    # def get_mentioned_users(self, obj):
+    #     from post_app.models import MentionModel
+    #     from django.contrib.contenttypes.models import ContentType
+    #     ctype = ContentType.objects.get_for_model(obj)
+    #     mentions = MentionModel.objects.filter(content_type=ctype, object_id=obj.id)
+    #     return [
+    #     {"id": m.mentioned_user.id, "username": m.mentioned_user.username,"slug":obj.slug}
+    #     for m in mentions
+    # ]
 
     def get_is_mention(self, obj):
         request = self.context.get("request", None)

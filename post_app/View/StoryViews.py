@@ -7,7 +7,7 @@ from follower_app.models import Follower
 from post_app.Serializer.StorySerializer import StorySerializer, StoryViewSerializer
 from django.utils import timezone
 from django.db.models import Q
-
+from post_app.utils.mentions import save_mentions
 
 class IsOwnerOrReadOnly(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
@@ -79,8 +79,12 @@ class StoryViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
+        
         if serializer.is_valid():
             serializer.save(user=request.user)
+            story_instance = serializer.save(user=request.user)
+            mentions = request.data.get('mentions', [])
+            save_mentions(request.user, mentions, story_instance)
             return Response({
                 "success": True,
                 "message": "story created",
@@ -95,7 +99,16 @@ class StoryViewSet(viewsets.ModelViewSet):
         }, status=status.HTTP_400_BAD_REQUEST)
 
     def partial_update(self, request, *args, **kwargs):
-        raise MethodNotAllowed("PATCH", detail="Story update is not allowed.")
+        story_instance = self.get_object()
+        mentions = request.data.get('mentions', [])
+        save_mentions(request.user, mentions, story_instance)
+        serializer = self.get_serializer(story_instance)
+        return Response({
+            "success": True,
+            "message": "Mentions updated successfully.",
+            "data": serializer.data
+        }, status=status.HTTP_200_OK)
+        # raise MethodNotAllowed("PATCH", detail="Story update is not allowed.")
 
     def update(self, request, *args, **kwargs):
         raise MethodNotAllowed("PUT", detail="Story update is not allowed.")

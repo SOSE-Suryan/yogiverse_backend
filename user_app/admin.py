@@ -50,12 +50,12 @@ class ProfileModelAdmin(ImportExportModelAdmin):
 
 @admin.register(MainCategoryModel)
 class VendorMainCategoryAdmin(ImportExportModelAdmin):
-    list_display = ('id', 'name')[::-1]
+    list_display = ('id', 'name','sequence')[::-1]
     search_fields = ('name',)
 
 @admin.register(SubCategoryModel)
 class VendorSubCategoryAdmin(ImportExportModelAdmin):
-    list_display = ('id','name','main_category')
+    list_display = ('id','name','main_category','sequence')
     search_fields = ('name',)
 
 @admin.register(VendorProfileModel)

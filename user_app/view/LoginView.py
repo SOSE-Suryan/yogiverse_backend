@@ -132,6 +132,8 @@ class PasswordLoginView(APIView):
         password = request.data.get('password')
     
         user = authenticate(username=username, password=password)
+        if user.is_active == False:
+            return Response({'detail': 'Your account has been deactivated!'}, status=status.HTTP_401_UNAUTHORIZED)
         if user is not None:
             # if user.is_delete:
             #     return Response({'detail': 'Your account has been deleted'}, status=status.HTTP_401_UNAUTHORIZED)

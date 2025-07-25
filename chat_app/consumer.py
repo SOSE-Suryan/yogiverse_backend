@@ -46,13 +46,14 @@ class AsyncChatConsumer(AsyncConsumer):
         return json.dumps(serializer.data)
 
     @database_sync_to_async
-    def save_message(self, message_content, employee, conversation, files=None):
+    def save_message(self, message_content, employee, conversation, files=None,message_type=None, mention_link=None):
         from .models import MessageModel, ChatAttachmentModel
         from django.conf import settings
         message = MessageModel.objects.create(
             message=message_content,
             sender=employee,
             chat=conversation,
+            message_type=message_type
         )
         if files:
             for file_data in files: 
@@ -104,13 +105,17 @@ class AsyncChatConsumer(AsyncConsumer):
         elif query_type == "send_message":
             message_content = query_dict.get('content')
             files = query_dict.get('files', None)
+            message_type = query_dict.get('message_type', None)
 
             try:
                 from user_app.models import UserModel
                 from .models import ChatModel
                 employee = await database_sync_to_async(UserModel.objects.get)(id=user.id)
                 conversation = await database_sync_to_async(ChatModel.objects.get)(chat_id=self.chat_id)
-                message = await self.save_message(message_content, employee, conversation,files=files)
+                message = await self.save_message(message_content, employee, conversation,
+                                                  files=files,
+                                                  message_type=message_type
+                                                  )
                 serialized_data = await self.serialize_message(message)
 
                 # Broadcast the message to the group

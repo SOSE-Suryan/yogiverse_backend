@@ -4,6 +4,10 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 import json
 import base64
 from django.core.files.base import ContentFile
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class AsyncChatConsumer(AsyncConsumer):
     async def websocket_connect(self, event):
@@ -106,6 +110,9 @@ class AsyncChatConsumer(AsyncConsumer):
             message_content = query_dict.get('content')
             files = query_dict.get('files', None)
             message_type = query_dict.get('message_type', None)
+            
+            logger.info(f"Received message content: {message_content}, files: {files}, message_type: {message_type}")
+            logger.info(f"message_type: {message_type}")
 
             try:
                 from user_app.models import UserModel

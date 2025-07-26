@@ -159,7 +159,7 @@ class ProfileView(APIView):
                     for link in existing_links_qs:
                         if link.id not in received_ids:
                             link.delete()
-
+                    updated_profile = serializer.data
                     if request.user.role == 'vendor':
                         vendor_data = request.data.copy()
                         for field in request.FILES:
@@ -186,7 +186,6 @@ class ProfileView(APIView):
                                 return Response({'status': False, 'message': vendor_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
                     
-                        updated_profile = ProfileSerializer(profile).data
                         if request.user.role == 'vendor':
                             vendor_profile = VendorProfileModel.objects.get(user=request.user)
                             updated_profile = {

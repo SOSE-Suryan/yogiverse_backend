@@ -52,6 +52,7 @@ class MessageModel(models.Model):
         ('mention', 'Mention'),
         ('document', 'Document'),
         ('image', 'Image'),
+        ('file', 'File')
     ]
     chat = models.ForeignKey(ChatModel, on_delete=models.CASCADE, blank=True, null=True, related_name = 'messages')
     sender = models.ForeignKey(UserModel, on_delete=models.CASCADE, null=True, blank=True)
@@ -61,7 +62,7 @@ class MessageModel(models.Model):
     files_attachment = models.ManyToManyField(ChatAttachmentModel)
     is_read = models.BooleanField(default=False)
     
-    message_type = models.CharField(max_length=10, choices=MESSAGE_TYPE_CHOICES, default='text')
+    message_type = models.CharField(max_length=10, choices=MESSAGE_TYPE_CHOICES, default='text',null=True, blank=True)
     # attachment_url = models.URLField(blank=True, null=True, max_length=500)
     # attachment_file_name = models.SlugField(blank=True, null=True, max_length=300)
 

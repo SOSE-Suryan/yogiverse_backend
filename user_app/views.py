@@ -20,8 +20,9 @@ class ResetPasswordSendLinkView(APIView):
             email = request.data['email']
             get_user = UserModel.objects.get(email=email)
             new_reset_obj = PasswordResetLinkModel.objects.create(user=get_user)
-            http_referer = request.META.get('HTTP_REFERER', None)
-            new_reset_obj.url_link = f"{http_referer}reset-password/{new_reset_obj.reset_uuid}"
+            # http_referer = request.META.get('HTTP_REFERER', None)
+            http_url ="https://yogiverse.in/" 
+            new_reset_obj.url_link = f"{http_url}reset-password/{new_reset_obj.reset_uuid}"
             new_reset_obj.save()
             
             role = getattr(get_user, 'role', None)
